@@ -80,14 +80,12 @@ interface ProjectRowProps {
 function ProjectRow({ name, description, tags, image }: ProjectRowProps) {
   return (
     <div
-      className="flex flex-col md:flex-row md:items-start w-full"
-      style={{ paddingTop: "clamp(32px, 4vw, 78px)", paddingBottom: "clamp(32px, 4vw, 78px)", gap: "clamp(24px, 3vw, 48px)" }}
+      className="flex w-full flex-col gap-[clamp(24px,3vw,48px)] max-md:rounded-md max-md:bg-white max-md:p-4 max-md:shadow-sm md:flex-row md:items-start md:bg-transparent md:px-0 md:py-[clamp(32px,4vw,78px)] md:shadow-none"
     >
-        {/* Left — text */}
+        {/* Left — text: full width on small screens, fixed column from md (Figma) */}
         <div
-          className="flex flex-col shrink-0"
+          className="flex min-w-0 w-full shrink-0 flex-col md:w-[clamp(220px,28%,430px)]"
           style={{
-            width: "clamp(220px, 28%, 430px)",
             gap: 16,
             paddingTop: 6,
           }}
@@ -147,7 +145,7 @@ export function ProjectsSection() {
     <section
       id="work"
       data-scroll-section
-      className="relative w-full bg-white"
+      className="relative w-full bg-[var(--work-canvas)] md:bg-white"
     >
       <LayoutContainer
         className="flex flex-col"
@@ -191,8 +189,8 @@ export function ProjectsSection() {
           </button>
         </div>
 
-        {/* Project list */}
-        <div className="flex flex-col w-full">
+        {/* Mobile: karty na sivom canvase; desktop: plochý zoznam, medzery len z ProjectRow py */}
+        <div className="flex w-full flex-col gap-3 md:gap-0">
           {PROJECTS.map((project) => (
             <ProjectRow key={project.name} {...project} />
           ))}

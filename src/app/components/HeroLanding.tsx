@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useInView } from "@/app/hooks/useInView";
 import svgPaths from "@/imports/MainContainer/svg-mqtv51ktgp";
 import imgBackgroundImage from "@/imports/image.png";
+import imgHeadlineBlur from "@/imports/blur.png";
+import patternHero from "@/imports/Pattern.svg?url";
 import imgProfileImage1 from "@/imports/MainContainer/ecc192fa4213baaac273888921a1551274ec058a.png";
 import { LogosSection } from "@/app/components/LogosSection";
 import { ProcessSection } from "@/app/components/ProcessSection";
@@ -166,11 +168,11 @@ export function HeroLanding() {
         {/* ── Hero ── */}
         <section
           id="hero"
-          className="relative w-full overflow-hidden flex items-center justify-center"
+          className="relative flex w-full items-center justify-center overflow-x-visible overflow-y-clip"
           style={{ minHeight: "100vh" }}
         >
           {/* Background */}
-          <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute inset-0 z-0 pointer-events-none">
             <img
               src={imgBackgroundImage}
               alt=""
@@ -178,36 +180,80 @@ export function HeroLanding() {
             />
           </div>
 
-          {/* Glow */}
+          {/* Glow — pod patternami (z-[1]), inak rozmazanie prebíja biely pattern a pôsobí ako miznutie) */}
           <div
-            className="absolute pointer-events-none"
+            className="pointer-events-none absolute left-1/2 top-1/2 z-[1] w-[60%] max-w-[900px] -translate-x-1/2 -translate-y-1/2"
             style={{
-              width: "60%",
               height: 200,
               borderRadius: "50%",
               filter: "blur(88px)",
               background: "linear-gradient(84deg, rgb(182,179,64) 1%, rgb(14,146,102) 96%)",
               opacity: 0.55,
             }}
+            aria-hidden
           />
+
+          {/* Pattern — right edge (silnejší posun doprava + užší pás) */}
+          <div
+            className="pointer-events-none absolute inset-y-0 right-0 z-[2] flex w-[min(38%,360px)] max-w-[32rem] translate-x-10 justify-end sm:w-[min(36%,380px)] sm:translate-x-12 md:w-[min(28%,420px)] md:translate-x-16 lg:translate-x-20 xl:translate-x-24"
+            aria-hidden
+          >
+            <img
+              src={patternHero}
+              alt=""
+              className="h-full w-auto max-w-full object-contain object-right opacity-[0.92]"
+              loading="eager"
+              decoding="async"
+            />
+          </div>
+
+          {/* Pattern — ľavý okraj (od md; silnejší posun doľava) */}
+          <div
+            className="pointer-events-none absolute inset-y-0 left-0 z-[2] hidden w-[min(38%,360px)] max-w-[32rem] -translate-x-10 sm:w-[min(36%,380px)] sm:-translate-x-12 md:block md:w-[min(28%,420px)] md:-translate-x-16 lg:-translate-x-20 xl:-translate-x-24"
+            aria-hidden
+          >
+            <div className="h-full w-full -scale-x-100">
+              <div className="flex h-full w-full justify-end">
+                <img
+                  src={patternHero}
+                  alt=""
+                  className="h-full w-auto max-w-full object-contain object-right opacity-[0.92]"
+                  loading="eager"
+                  decoding="async"
+                />
+              </div>
+            </div>
+          </div>
 
           <LayoutContainer className="relative z-10 flex justify-center">
           <div
             ref={heroIntroRef}
             className="flex flex-col items-center text-center"
           >
-            <RevealHeadline
-              as="h1"
-              inView={heroInView}
-              lines={["Senior design team", "Assembled for you."]}
-              className="text-white m-0 mb-8"
-              style={{
-                fontWeight: 500,
-                fontSize: "clamp(40px, 5.5vw, 72px)",
-                lineHeight: 1.17,
-                letterSpacing: "-2px",
-              }}
-            />
+            {/* Vrstva pod hlavný nadpis — blur.png na plnú šírku, negat. inset = väčšia plocha za okrajom textu */}
+            <div className="relative isolate mb-4 w-full sm:mb-5">
+              <img
+                src={imgHeadlineBlur}
+                alt=""
+                className="pointer-events-none absolute -inset-6 object-cover object-center sm:-inset-8 md:-inset-10 lg:-inset-12"
+                loading="eager"
+                aria-hidden
+              />
+              <div className="relative z-10 px-6 pt-5 pb-4 sm:px-9 sm:pt-6 sm:pb-4 md:px-12 md:pt-7 md:pb-5 lg:px-14 lg:pt-8 lg:pb-5">
+                <RevealHeadline
+                  as="h1"
+                  inView={heroInView}
+                  lines={["Senior design team", "Assembled for you."]}
+                  className="text-white m-0"
+                  style={{
+                    fontWeight: 500,
+                    fontSize: "clamp(40px, 5.5vw, 72px)",
+                    lineHeight: 1.17,
+                    letterSpacing: "-2px",
+                  }}
+                />
+              </div>
+            </div>
             <RevealHeadline
               as="p"
               inView={heroInView}

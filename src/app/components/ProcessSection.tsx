@@ -56,22 +56,31 @@ const PROCESS_SAND = "rgba(228, 222, 219, 0.6)";
 /** Po zobrazení nadpisu v viewporte – oneskorenie pred prechodom biela → piesok. */
 const SAND_REVEAL_DELAY_MS = 240;
 
+/**
+ * Intersection len s hornou časťou okna: root je zúžený zdola (cca horných 35 % výšky viewportu),
+ * takže piesok sa zapne až keď je blok nadpisu v tejto zóne (pri scrollovaní nahor).
+ */
+const SAND_HEADLINE_ROOT_MARGIN = "0px 0px -65% 0px";
+
 // ─── Section (Figma: Testing > node 601:17068) ────────────────────────────────
 export function ProcessSection() {
   const sandHeadlineRef = useRef<HTMLDivElement>(null);
   const { inView: sandHeadlineInView } = useInView<HTMLDivElement>({
     elementRef: sandHeadlineRef,
-    once: true,
-    threshold: 0.35,
+    once: false,
+    threshold: 0,
+    rootMargin: SAND_HEADLINE_ROOT_MARGIN,
   });
   const [sandOn, setSandOn] = useState(false);
 
   useEffect(() => {
-    if (!sandHeadlineInView) return;
-    const id = window.setTimeout(() => {
-      setSandOn(true);
-    }, SAND_REVEAL_DELAY_MS);
-    return () => clearTimeout(id);
+    if (sandHeadlineInView) {
+      const id = window.setTimeout(() => {
+        setSandOn(true);
+      }, SAND_REVEAL_DELAY_MS);
+      return () => clearTimeout(id);
+    }
+    setSandOn(false);
   }, [sandHeadlineInView]);
 
   return (

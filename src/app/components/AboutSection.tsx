@@ -70,13 +70,33 @@ function CardPatrik() {
 }
 
 // ─── Name + role label ────────────────────────────────────────────────────────
-function Label({ name, role }: { name: string; role: string }) {
+function Label({ name, role, compact }: { name: string; role: string; compact?: boolean }) {
   return (
-    <div className="flex flex-col gap-0.5 mt-3">
-      <p style={{ fontWeight: 500, fontSize: 24, color: "#013439", letterSpacing: "-0.72px", lineHeight: "normal" }}>
+    <div className="flex flex-col gap-0.5 mt-2 md:mt-3">
+      <p
+        style={{
+          fontWeight: 500,
+          color: "#013439",
+          letterSpacing: "-0.72px",
+          lineHeight: "normal",
+          ...(compact
+            ? { fontSize: "clamp(14px, 3.6vw, 24px)" }
+            : { fontSize: 24 }),
+        }}
+      >
         {name}
       </p>
-      <p style={{ fontWeight: 500, fontSize: 16, color: "rgba(1,52,57,0.5)", letterSpacing: "-0.48px", lineHeight: "normal" }}>
+      <p
+        style={{
+          fontWeight: 500,
+          color: "rgba(1,52,57,0.5)",
+          letterSpacing: "-0.48px",
+          lineHeight: "normal",
+          ...(compact
+            ? { fontSize: "clamp(11px, 2.4vw, 16px)" }
+            : { fontSize: 16 }),
+        }}
+      >
         {role}
       </p>
     </div>
@@ -153,8 +173,8 @@ export function AboutSection() {
           </div>
         </div>
 
-        {/* Mobile — single column stack */}
-        <div className="flex md:hidden flex-col gap-10">
+        {/* Mobile — two people per row */}
+        <div className="grid md:hidden grid-cols-2 gap-x-[clamp(8px,2.5vw,20px)] gap-y-10">
           {[
             { Card: CardMartin,   name: "Martin Mroc",     role: "CEO & UX/UI Designer" },
             { Card: CardGabriel,  name: "Gabriel Hudoba",  role: "Consultant & UX/UI Designer" },
@@ -162,9 +182,9 @@ export function AboutSection() {
             { Card: CardMichaela, name: "Michaela Fias",   role: "Brand Designer" },
             { Card: CardPatrik,   name: "Patrik Smejkal",  role: "Product Manager" },
           ].map(({ Card, name, role }) => (
-            <div key={name}>
+            <div key={name} className="min-w-0">
               <Card />
-              <Label name={name} role={role} />
+              <Label name={name} role={role} compact />
             </div>
           ))}
         </div>

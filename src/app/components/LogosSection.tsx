@@ -1,5 +1,8 @@
+import type { CSSProperties } from "react";
 import svgPaths from "@/imports/Container/svg-9yp879bgs7";
 import { LayoutContainer } from "@/app/components/layout";
+import { cn } from "@/app/components/ui/utils";
+import { useInView } from "@/app/hooks/useInView";
 
 // Each logo is a plain inline SVG with viewBox + responsive height via CSS.
 // height is controlled by the parent cell — logo SVGs use height="100%" width="auto".
@@ -142,9 +145,18 @@ const logos = [
   { id: "audienceplus", el: <LogoAudiencePlus /> },
 ];
 
+/** Oneskořenie štartu animácie medzi susednými logami (v ms). */
+const LOGO_STAGGER_BETWEEN_MS = 80;
+
 export function LogosSection() {
+  const { ref: sectionRef, inView } = useInView<HTMLElement>({
+    once: true,
+    threshold: 0.22,
+  });
+
   return (
     <section
+      ref={sectionRef}
       id="clients"
       data-scroll-section
       className="relative w-full bg-white"
@@ -165,14 +177,16 @@ export function LogosSection() {
 
         {/* Logos grid:  3-col on mobile · 6-col on md+ (max šírka pasu ako predtým) */}
         <div className="w-full max-w-[1400px] grid grid-cols-3 md:grid-cols-6 gap-y-12 gap-x-6 sm:gap-x-8 md:gap-y-0 md:gap-x-10 lg:gap-x-14">
-          {logos.map(({ id, el }) => (
+          {logos.map(({ id, el }, i) => (
             <div
               key={id}
-              className="flex items-center justify-center px-1 sm:px-2"
-              /* Dividers between cells on desktop */
-              style={{
-                borderRight: "1px solid transparent",
-              }}
+              className={cn("client-logo px-1 sm:px-2", inView && "client-logo--visible")}
+              style={
+                {
+                  borderRight: "1px solid transparent",
+                  "--logo-delay": `${i * LOGO_STAGGER_BETWEEN_MS}ms`,
+                } as CSSProperties
+              }
             >
               {el}
             </div>

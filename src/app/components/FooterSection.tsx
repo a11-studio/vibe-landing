@@ -87,7 +87,7 @@ export function FooterSection() {
 
   return (
     <footer
-      className="relative flex min-h-[clamp(600px,76svh,1100px)] w-full flex-col overflow-x-clip"
+      className="relative flex w-full min-h-[clamp(780px,92svh,1200px)] flex-col overflow-x-clip sm:min-h-[clamp(600px,76svh,1100px)]"
       style={{ backgroundColor: FIGMA.bg }}
     >
       <div
@@ -111,10 +111,9 @@ export function FooterSection() {
       </div>
 
       <LayoutContainer
-        className="relative z-10 flex flex-1 flex-col"
+        className="relative z-10 flex flex-1 flex-col [padding-bottom:max(1.5rem,env(safe-area-inset-bottom,0px))]"
         style={{
           paddingTop: "clamp(72px, 8vw, 140px)",
-          paddingBottom: "clamp(48px, 5.2vw, 96px)",
         }}
       >
         <LayoutGrid className="flex-1 content-start">
@@ -182,7 +181,7 @@ export function FooterSection() {
             </div>
 
             <div
-              className="flex max-w-[320px] flex-col gap-2"
+              className="flex max-w-[320px] flex-col gap-2 max-sm:mb-2 max-sm:pb-2"
               style={{ marginTop: "clamp(48px, 5.6vw, 109px)" }}
             >
               <a
@@ -217,10 +216,10 @@ export function FooterSection() {
           </div>
         </LayoutGrid>
 
-        <LayoutGrid className="relative z-20 mt-auto pt-[clamp(48px,7vw,112px)]">
-          <div className="col-span-12 flex flex-wrap items-center justify-between gap-8 sm:col-start-2 sm:col-span-10 sm:gap-6">
+        <LayoutGrid className="relative z-20 mt-auto pt-[clamp(64px,11vw,112px)] sm:pt-[clamp(48px,7vw,112px)]">
+          <div className="col-span-12 flex flex-col items-start gap-6 sm:col-start-2 sm:col-span-10 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
             <VibeLogoWhite />
-            <nav className="flex items-center gap-6 sm:gap-8">
+            <nav className="flex w-full max-md:flex-nowrap max-md:justify-between max-md:gap-0 items-center gap-x-6 gap-y-2 sm:w-auto sm:justify-start sm:gap-8">
               {(
                 [
                   { label: "Instagram", href: "#" },
@@ -240,7 +239,7 @@ export function FooterSection() {
                     lineHeight: "normal",
                     textDecoration: "none",
                   }}
-                  className="hover:opacity-50 transition-opacity duration-200 whitespace-nowrap"
+                  className="shrink-0 text-left hover:opacity-50 transition-opacity duration-200 sm:whitespace-nowrap"
                 >
                   {label}
                 </a>

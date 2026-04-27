@@ -99,30 +99,28 @@ export function Process2Section() {
           paddingBottom: "clamp(64px, 8.7vw, 167px)",
         }}
       >
-        <LayoutGrid>
-        {/* Headline */}
-        <div className="col-span-12 mb-12 md:mb-20">
-          <RevealHeadline
-            lines={["From idea to real", "product decisions."]}
-            style={{
-              fontWeight: 500,
-              fontSize: "clamp(32px, 3.54vw, 68px)",
-              color: "white",
-              letterSpacing: "-0.044em",
-              lineHeight: "normal",
-              margin: 0,
-            }}
-          />
-        </div>
+        <LayoutGrid className="items-start gap-y-12 md:gap-y-0">
+          {/* Ľavý nadpis a pravý zoznam v jednom riadku (md+), horizontálne zarovnané hore */}
+          <div className="col-span-12 md:col-span-6">
+            <RevealHeadline
+              lines={["From idea to real", "product decisions."]}
+              style={{
+                fontWeight: 500,
+                fontSize: "clamp(32px, 3.54vw, 68px)",
+                color: "white",
+                letterSpacing: "-0.044em",
+                lineHeight: "normal",
+                margin: 0,
+              }}
+            />
+          </div>
 
-        <div className="col-span-12 w-full md:col-start-7 md:col-span-6">
-          {/* Bottom border after last item */}
-          {STEPS.map((label, i) => (
-            <ProcessRow key={i} index={i + 1} label={label} />
-          ))}
-          {/* Closing line */}
-          <div style={{ borderTop: "1px solid rgba(255,255,255,0.1)" }} />
-        </div>
+          <div className="col-span-12 w-full md:col-start-7 md:col-span-6">
+            {STEPS.map((label, i) => (
+              <ProcessRow key={i} index={i + 1} label={label} />
+            ))}
+            <div style={{ borderTop: "1px solid rgba(255,255,255,0.1)" }} />
+          </div>
         </LayoutGrid>
       </LayoutContainer>
     </section>

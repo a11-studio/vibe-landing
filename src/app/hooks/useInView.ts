@@ -26,11 +26,15 @@ export function useInView<T extends HTMLElement = HTMLDivElement>(options?: {
     const obs = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
-          if (entry.isIntersecting) {
-            setInView(true);
-            if (once) obs.disconnect();
+          if (once) {
+            if (entry.isIntersecting) {
+              setInView(true);
+              obs.disconnect();
+            }
+          } else {
+            setInView(entry.isIntersecting);
           }
-         }
+        }
       },
       { threshold, rootMargin }
     );
