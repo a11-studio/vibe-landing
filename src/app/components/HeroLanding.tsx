@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useId, useRef, useState, type CSSProperties } from "react";
 import { useInView } from "@/app/hooks/useInView";
+import { cn } from "@/app/components/ui/utils";
 import svgPaths from "@/imports/MainContainer/svg-mqtv51ktgp";
 import imgBackgroundImage from "@/imports/image.png";
 import imgHeadlineBlur from "@/imports/blur.png";
@@ -26,62 +27,299 @@ function VibeLogo() {
   );
 }
 
-// ─── Hamburger Icon ───────────────────────────────────────────────────────────
-function HamburgerIcon() {
+// ─── Menu toggle: designcouch „icon 4“ (CodePen ExvwPY, #nav-icon4) ───────────
+// https://codepen.io/designcouch/pen/ExvwPY — ľavý transform-origin, stred mizne na šírku 0
+function MenuToggleIcon({ open }: { open: boolean }) {
+  const line: CSSProperties = {
+    display: "block",
+    position: "absolute",
+    height: 6,
+    width: "100%",
+    backgroundColor: "currentColor",
+    borderRadius: 3,
+    left: 0,
+    transition: "0.25s ease-in-out",
+    transformOrigin: "left center",
+  };
+
+  const span1: CSSProperties = {
+    ...line,
+    top: open ? -3 : 0,
+    left: open ? 8 : 0,
+    transform: open ? "rotate(45deg)" : "rotate(0deg)",
+  };
+  const span2: CSSProperties = {
+    ...line,
+    top: 18,
+    width: open ? "0%" : "100%",
+    opacity: open ? 0 : 1,
+  };
+  const span3: CSSProperties = {
+    ...line,
+    top: open ? 39 : 36,
+    left: open ? 8 : 0,
+    transform: open ? "rotate(-45deg)" : "rotate(0deg)",
+  };
+
   return (
-    <svg width="20" height="14" viewBox="0 0 20 14" fill="none">
-      <path d="M18 7H1.2"  stroke="#212121" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M18 1H1.2"  stroke="#212121" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M18 13H1.2" stroke="#212121" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
+    <div
+      className="pointer-events-none relative inline-block h-[15px] w-5 shrink-0 overflow-visible motion-reduce:[&_span]:!transition-none"
+      aria-hidden
+    >
+      <div
+        className="absolute left-0 top-0 will-change-transform"
+        style={{
+          width: 60,
+          height: 45,
+          transform: "scale(0.333333)",
+          transformOrigin: "top left",
+        }}
+      >
+        <span style={span1} />
+        <span style={span2} />
+        <span style={span3} />
+      </div>
+    </div>
   );
 }
 
-// ─── Navbar ───────────────────────────────────────────────────────────────────
-function Navbar({ scrollY }: { scrollY: number }) {
-  const scrolled = scrollY > 40;
+const MOBILE_NAV = [
+  { label: "About", href: "#process" },
+  { label: "Projects", href: "#work" },
+  { label: "Team", href: "#team" },
+] as const;
+
+// ─── Biely zaoblený box pod pill barom (Figma 609:3277) ───────────────────────
+function NavMenuPanel({
+  id,
+  onRequestClose,
+  ariaHidden,
+}: {
+  id: string;
+  onRequestClose: () => void;
+  ariaHidden?: boolean;
+}) {
   return (
-    <header className="fixed top-5 left-0 right-0 z-50" style={{ willChange: "transform" }}>
-      <LayoutContainer className="flex justify-center">
-      <nav
-        className="flex items-center gap-10 px-5 rounded-[70px] transition-all duration-500"
-        style={{
-          height: 54,
-          backgroundColor: scrolled ? "rgba(255,255,255,0.92)" : "rgba(255,255,255,1)",
-          backdropFilter: scrolled ? "blur(16px)" : "none",
-          boxShadow: scrolled
-            ? "0 4px 32px rgba(0,0,0,0.10), 0 1px 6px rgba(0,0,0,0.06)"
-            : "0 2px 20px rgba(0,0,0,0.08)",
-        }}
-      >
-        {/* Logo */}
-        <div className="flex items-center shrink-0 cursor-pointer">
-          <VibeLogo />
-        </div>
-
-        {/* Nav links */}
-        <div className="hidden sm:flex items-center gap-10">
-          {["Process", "Work", "Team"].map((link) => (
-            <a
-              key={link}
-              href={`#${link.toLowerCase()}`}
-              className="text-[15px] font-medium text-black whitespace-nowrap transition-opacity duration-200 hover:opacity-50"
-            >
-              {link}
-            </a>
+    <div
+      id={id}
+      role="dialog"
+      aria-modal="true"
+      aria-hidden={ariaHidden ? true : undefined}
+      aria-label="Site menu"
+      className="w-full max-w-[535px] rounded-[48px] bg-white px-6 py-10 sm:px-10 sm:py-12"
+      style={{
+        boxShadow:
+          "0 24px 64px rgba(0,0,0,0.12), 0 8px 20px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04)",
+      }}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <nav className="flex flex-col items-center" aria-label="Primary">
+        <ul className="flex w-full max-w-[469px] flex-col items-center gap-12 sm:gap-16 list-none m-0 p-0">
+          {MOBILE_NAV.map((item) => (
+            <li key={item.href}>
+              <a
+                href={item.href}
+                className="block text-center text-[22px] font-medium leading-none text-black tracking-[-0.84px] transition-opacity duration-200 hover:opacity-50 sm:text-[28px]"
+                onClick={onRequestClose}
+              >
+                {item.label}
+              </a>
+            </li>
           ))}
-        </div>
+        </ul>
 
-        {/* Hamburger */}
-        <button
-          className="flex items-center justify-center w-6 h-6 shrink-0 hover:opacity-50 transition-opacity duration-200"
-          aria-label="Open menu"
+        <div
+          className="mt-10 h-px w-full max-w-[469px] bg-black/10 sm:mt-16"
+          aria-hidden
+        />
+
+        <a
+          href="mailto:vibestudio@design?subject=Hello"
+          className="mt-8 text-center text-[16px] font-medium leading-none text-black tracking-[-0.54px] transition-opacity duration-200 hover:opacity-50 sm:mt-10 sm:text-[18px]"
         >
-          <HamburgerIcon />
-        </button>
+          vibestudio@design
+        </a>
+
+        <a
+          href="mailto:vibestudio@design?subject=Schedule%20a%20call"
+          className="mt-8 inline-flex items-center justify-center rounded-[40px] bg-[#040404] px-6 py-3 text-[16px] font-medium leading-none text-white tracking-[-0.54px] transition-opacity duration-200 hover:opacity-90 sm:mt-10 sm:text-[18px]"
+          onClick={onRequestClose}
+        >
+          schedule a call
+        </a>
       </nav>
-      </LayoutContainer>
-    </header>
+    </div>
+  );
+}
+
+const MENU_LAYER_MS = 360;
+
+// ─── Navbar (pill + hamburger; pri otvorení box pod barom) ────────────────────
+function Navbar({
+  scrollY,
+  menuOpen,
+  menuPanelId,
+  onMenuOpenChange,
+}: {
+  scrollY: number;
+  menuOpen: boolean;
+  menuPanelId: string;
+  onMenuOpenChange: (open: boolean) => void;
+}) {
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const [layerMounted, setLayerMounted] = useState(false);
+  const [layerVisible, setLayerVisible] = useState(false);
+  const scrolled = scrollY > 40;
+  const layerOpen = menuOpen || layerMounted;
+  const zHeader = layerOpen ? 100 : 50;
+
+  useEffect(() => {
+    if (menuOpen) {
+      setLayerMounted(true);
+      const id = requestAnimationFrame(() => {
+        requestAnimationFrame(() => setLayerVisible(true));
+      });
+      return () => cancelAnimationFrame(id);
+    }
+    setLayerVisible(false);
+  }, [menuOpen]);
+
+  useEffect(() => {
+    if (menuOpen || layerVisible) return;
+    if (!layerMounted) return;
+    const t = window.setTimeout(() => {
+      setLayerMounted(false);
+    }, MENU_LAYER_MS);
+    return () => window.clearTimeout(t);
+  }, [menuOpen, layerVisible, layerMounted]);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onMenuOpenChange(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [menuOpen, onMenuOpenChange]);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    closeRef.current?.focus();
+  }, [menuOpen]);
+
+  useEffect(() => {
+    if (!layerMounted) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [layerMounted]);
+
+  return (
+    <>
+      {layerMounted && (
+        <div
+          className={cn(
+            "fixed inset-0 z-[90] cursor-pointer bg-black/15",
+            "transition-opacity ease-out motion-reduce:transition-none",
+          )}
+          style={{
+            transitionDuration: `${MENU_LAYER_MS}ms`,
+            opacity: layerVisible ? 1 : 0,
+            pointerEvents: layerVisible ? "auto" : "none",
+            backdropFilter: "blur(2px)",
+          }}
+          aria-hidden
+          onClick={() => onMenuOpenChange(false)}
+        />
+      )}
+
+      <header
+        className="fixed top-5 left-0 right-0 flex flex-col items-center"
+        style={{ willChange: "transform", zIndex: zHeader }}
+      >
+        <LayoutContainer className="flex w-full max-w-full flex-col items-center">
+          <nav
+            className="inline-flex max-w-full items-center gap-4 px-4 rounded-[70px] transition-all duration-500 sm:gap-10 sm:px-5"
+            style={{
+              minHeight: 54,
+              backgroundColor: scrolled ? "rgba(255,255,255,0.92)" : "rgba(255,255,255,1)",
+              backdropFilter: scrolled ? "blur(16px)" : "none",
+              boxShadow: layerOpen
+                ? "0 8px 32px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06)"
+                : scrolled
+                  ? "0 4px 32px rgba(0,0,0,0.10), 0 1px 6px rgba(0,0,0,0.06)"
+                  : "0 2px 20px rgba(0,0,0,0.08)",
+            }}
+            aria-label="Main"
+          >
+            <a
+              href="#hero"
+              className="flex shrink-0 cursor-pointer items-center"
+              onClick={() => {
+                if (menuOpen) onMenuOpenChange(false);
+              }}
+            >
+              <VibeLogo />
+            </a>
+
+            <div className="hidden min-w-0 sm:flex sm:items-center sm:gap-10">
+              {["Process", "Work", "Team"].map((link) => (
+                <a
+                  key={link}
+                  href={`#${link.toLowerCase()}`}
+                  className="text-[15px] font-medium text-black whitespace-nowrap transition-opacity duration-200 hover:opacity-50"
+                  onClick={() => {
+                    if (menuOpen) onMenuOpenChange(false);
+                  }}
+                >
+                  {link}
+                </a>
+              ))}
+            </div>
+
+            <button
+              ref={closeRef}
+              type="button"
+              className="flex h-6 w-6 cursor-pointer shrink-0 items-center justify-center text-[#212121] transition-opacity duration-200 hover:opacity-50"
+              aria-label={menuOpen ? "Close menu" : "Open menu"}
+              aria-expanded={menuOpen}
+              aria-controls={menuOpen ? menuPanelId : undefined}
+              aria-haspopup="dialog"
+              onClick={() => onMenuOpenChange(!menuOpen)}
+            >
+              <MenuToggleIcon open={menuOpen} />
+            </button>
+          </nav>
+
+          {layerMounted && (
+            <div
+              className={cn(
+                "mt-2 w-full max-w-[min(100%,535px)] will-change-transform sm:px-0",
+                "motion-reduce:transition-none",
+                "transition-[opacity,transform]",
+                "ease-[cubic-bezier(0.16,1,0.3,1)]",
+              )}
+              style={{
+                transitionDuration: `${MENU_LAYER_MS}ms`,
+                opacity: layerVisible ? 1 : 0,
+                transform: layerVisible
+                  ? "translateY(0) scale(1)"
+                  : "translateY(-10px) scale(0.98)",
+                pointerEvents: layerVisible ? "auto" : "none",
+              }}
+            >
+              <NavMenuPanel
+                id={menuPanelId}
+                onRequestClose={() => onMenuOpenChange(false)}
+                ariaHidden={!layerVisible}
+              />
+            </div>
+          )}
+        </LayoutContainer>
+      </header>
+    </>
   );
 }
 
@@ -148,6 +386,8 @@ function ScheduleCTA({ scrolled }: { scrolled: boolean }) {
 // ─── Hero Section ─────────────────────────────────────────────────────────────
 export function HeroLanding() {
   const [scrollY, setScrollY] = useState(0);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuPanelId = useId();
   const { ref: heroIntroRef, inView: heroInView } = useInView<HTMLDivElement>({
     once: true,
     threshold: 0.25,
@@ -161,7 +401,12 @@ export function HeroLanding() {
 
   return (
     <>
-      <Navbar scrollY={scrollY} />
+      <Navbar
+        scrollY={scrollY}
+        menuOpen={menuOpen}
+        menuPanelId={menuPanelId}
+        onMenuOpenChange={setMenuOpen}
+      />
 
       <div className="relative w-full">
 
