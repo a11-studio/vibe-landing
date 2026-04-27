@@ -3,6 +3,8 @@ import imgRealitiez   from "figma:asset/e456a14899251227c4ec37785838c3ea552f7971
 import imgAccuWeather from "figma:asset/ccbe4b5cf5687edf1efe0a848055c6d13b9a393f.png";
 import imgSelfCheck   from "figma:asset/a09f93abcab1572bed25b1d59de6c0f2be87884a.png";
 import imgSpotify     from "figma:asset/5befbd932cd55a328c20d0b015fe5afc87e4ad6f.png";
+import { LayoutContainer } from "@/app/components/layout";
+import { RevealHeadline } from "@/app/components/RevealHeadline";
 import { ArrowIcon } from "@/app/components/shared/ArrowIcon";
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
@@ -147,19 +149,18 @@ export function ProjectsSection() {
       data-scroll-section
       className="relative w-full bg-white"
     >
-      <div
-        className="mx-auto w-full flex flex-col"
+      <LayoutContainer
+        className="flex flex-col"
         style={{
-          maxWidth: 1920,
           paddingTop: "clamp(48px, 6.5vw, 124px)",
           paddingBottom: "clamp(48px, 6.5vw, 124px)",
-          paddingLeft: "clamp(16px, 2.1vw, 40px)",
-          paddingRight: "clamp(16px, 2.1vw, 40px)",
         }}
       >
         {/* Section heading */}
-        <div className="flex items-center justify-between mb-10 md:mb-16">
-          <h2
+        <div className="flex items-center justify-between gap-4 mb-10 md:mb-16">
+          <RevealHeadline
+            lines={["This is how we do it"]}
+            wrapperClassName="min-w-0 flex-1"
             style={{
               fontWeight: 500,
               fontSize: "clamp(28px, 3.54vw, 68px)",
@@ -168,9 +169,7 @@ export function ProjectsSection() {
               lineHeight: "normal",
               margin: 0,
             }}
-          >
-            This is how we do it
-          </h2>
+          />
 
           {/* See all */}
           <button
@@ -198,7 +197,7 @@ export function ProjectsSection() {
             <ProjectRow key={project.name} {...project} />
           ))}
         </div>
-      </div>
+      </LayoutContainer>
     </section>
   );
 }

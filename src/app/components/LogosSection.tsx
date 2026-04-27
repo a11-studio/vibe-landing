@@ -1,4 +1,5 @@
 import svgPaths from "@/imports/Container/svg-9yp879bgs7";
+import { LayoutContainer } from "@/app/components/layout";
 
 // Each logo is a plain inline SVG with viewBox + responsive height via CSS.
 // height is controlled by the parent cell — logo SVGs use height="100%" width="auto".
@@ -149,7 +150,7 @@ export function LogosSection() {
       className="relative w-full bg-white"
       style={{ paddingTop: 72, paddingBottom: 88 }}
     >
-      <div className="max-w-[1280px] mx-auto px-6 sm:px-10 flex flex-col items-center gap-12">
+      <LayoutContainer className="flex flex-col items-center gap-12">
         {/* Subtitle */}
         <p
           style={{
@@ -162,12 +163,12 @@ export function LogosSection() {
           We have deep experience across fintech, web3, and SaaS.
         </p>
 
-        {/* Logos grid:  3-col on mobile · 6-col on md+ */}
-        <div className="w-full grid grid-cols-3 md:grid-cols-6 gap-y-10 md:gap-y-0">
+        {/* Logos grid:  3-col on mobile · 6-col on md+ (max šírka pasu ako predtým) */}
+        <div className="w-full max-w-[1400px] grid grid-cols-3 md:grid-cols-6 gap-y-12 gap-x-6 sm:gap-x-8 md:gap-y-0 md:gap-x-10 lg:gap-x-14">
           {logos.map(({ id, el }) => (
             <div
               key={id}
-              className="flex items-center justify-center px-2"
+              className="flex items-center justify-center px-1 sm:px-2"
               /* Dividers between cells on desktop */
               style={{
                 borderRight: "1px solid transparent",
@@ -177,7 +178,7 @@ export function LogosSection() {
             </div>
           ))}
         </div>
-      </div>
+      </LayoutContainer>
     </section>
   );
 }

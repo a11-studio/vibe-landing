@@ -1,26 +1,27 @@
-import { useState } from "react";
+import type { CSSProperties } from "react";
+import { LayoutContainer, LayoutGrid } from "@/app/components/layout";
+import { RevealHeadline } from "@/app/components/RevealHeadline";
 import { ArrowIcon } from "@/app/components/shared/ArrowIcon";
 
 // ─── Process row ──────────────────────────────────────────────────────────────
 interface RowProps {
   index: number;
   label: string;
-  isFirst?: boolean;
 }
 
-function ProcessRow({ index, label, isFirst = false }: RowProps) {
-  const [hovered, setHovered] = useState(false);
+function ProcessRow({ index, label }: RowProps) {
   const num = String(index).padStart(2, "0");
+  const typeStyle: CSSProperties = {
+    fontWeight: 500,
+    fontSize: "clamp(20px, 2.5vw, 48px)",
+    letterSpacing: "-0.03em",
+    lineHeight: "normal",
+  };
 
   return (
     <div
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        borderTop: "1px solid rgba(255,255,255,0.1)",
-        cursor: "default",
-        transition: "background 0.2s ease",
-      }}
+      className="group cursor-default"
+      style={{ borderTop: "1px solid rgba(255,255,255,0.1)" }}
     >
       <div
         className="flex items-center"
@@ -30,35 +31,33 @@ function ProcessRow({ index, label, isFirst = false }: RowProps) {
           gap: "clamp(32px, 4vw, 80px)",
         }}
       >
-        {/* Number / Arrow col */}
+        {/*
+          Track: [šipka | číslo] (ľavá / pravá polovica). Default -translate-x-1/2 → vo výreze je
+          pravá polovica = číslo. Hover translate-x-0 → track sa posunie doprava, číslo odíde doprava,
+          zľava vjde šipka. Kladný +50% pri [číslo|šipka] by zobrazilo prázdno — to bol bug.
+        */}
         <div
-          style={{
-            width: "clamp(36px, 3.5vw, 52px)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "flex-end",
-            flexShrink: 0,
-          }}
+          className="w-[clamp(56px,4.5vw,76px)] shrink-0 overflow-hidden"
         >
-          {hovered ? (
-            <div style={{ transition: "opacity 0.15s ease", opacity: 1 }}>
-              <ArrowIcon color="#80999C" strokeWidth={3} />
-            </div>
-          ) : (
+          <div
+            className="flex w-[200%] -translate-x-1/2 transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform group-hover:translate-x-0 motion-reduce:duration-0"
+          >
             <span
-              style={{
-                fontWeight: 500,
-                fontSize: "clamp(20px, 2.5vw, 48px)",
-                color: "white",
-                letterSpacing: "-0.03em",
-                lineHeight: "normal",
-                transition: "opacity 0.15s ease",
-                opacity: hovered ? 0 : 1,
-              }}
+              className="flex w-1/2 items-center justify-end pl-1"
+              style={typeStyle}
+              aria-hidden
+            >
+              <span className="inline-flex size-11 shrink-0 items-center justify-center">
+                <ArrowIcon color="#80999C" strokeWidth={3} size={28} />
+              </span>
+            </span>
+            <span
+              className="flex w-1/2 items-center justify-end pr-0.5 text-right text-white"
+              style={typeStyle}
             >
               {num}
             </span>
-          )}
+          </div>
         </div>
 
         {/* Label */}
@@ -94,55 +93,38 @@ export function Process2Section() {
       className="relative w-full"
       style={{ backgroundColor: "#013439" }}
     >
-      <div
-        className="mx-auto w-full"
+      <LayoutContainer
         style={{
-          maxWidth: 1920,
           paddingTop: "clamp(64px, 8.7vw, 167px)",
           paddingBottom: "clamp(64px, 8.7vw, 167px)",
-          paddingLeft: "clamp(16px, 5.7vw, 109px)",
-          paddingRight: "clamp(16px, 5.7vw, 109px)",
         }}
       >
+        <LayoutGrid>
         {/* Headline */}
-        <div className="mb-12 md:mb-20">
-          <h2
+        <div className="col-span-12 mb-12 md:mb-20">
+          <RevealHeadline
+            lines={["From idea to real", "product decisions."]}
             style={{
               fontWeight: 500,
               fontSize: "clamp(32px, 3.54vw, 68px)",
               color: "white",
               letterSpacing: "-0.044em",
               lineHeight: "normal",
+              margin: 0,
             }}
-          >
-            From idea to real
-          </h2>
-          <h2
-            style={{
-              fontWeight: 500,
-              fontSize: "clamp(32px, 3.54vw, 68px)",
-              color: "white",
-              letterSpacing: "-0.044em",
-              lineHeight: "normal",
-            }}
-          >
-            product decisions.
-          </h2>
+          />
         </div>
 
-        {/* Process list — right-half of the screen, mirroring Figma layout */}
-        <div
-          className="ml-auto"
-          style={{ maxWidth: "clamp(300px, 60%, 1100px)" }}
-        >
+        <div className="col-span-12 w-full md:col-start-7 md:col-span-6">
           {/* Bottom border after last item */}
           {STEPS.map((label, i) => (
-            <ProcessRow key={i} index={i + 1} label={label} isFirst={i === 0} />
+            <ProcessRow key={i} index={i + 1} label={label} />
           ))}
           {/* Closing line */}
           <div style={{ borderTop: "1px solid rgba(255,255,255,0.1)" }} />
         </div>
-      </div>
+        </LayoutGrid>
+      </LayoutContainer>
     </section>
   );
 }

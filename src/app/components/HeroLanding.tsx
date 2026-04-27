@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useInView } from "@/app/hooks/useInView";
 import svgPaths from "@/imports/MainContainer/svg-mqtv51ktgp";
 import imgBackgroundImage from "@/imports/image.png";
 import imgProfileImage1 from "@/imports/MainContainer/ecc192fa4213baaac273888921a1551274ec058a.png";
@@ -8,6 +9,8 @@ import { Process2Section } from "@/app/components/Process2Section";
 import { ProjectsSection } from "@/app/components/ProjectsSection";
 import { AboutSection } from "@/app/components/AboutSection";
 import { FooterSection } from "@/app/components/FooterSection";
+import { LayoutContainer } from "@/app/components/layout";
+import { RevealHeadline } from "@/app/components/RevealHeadline";
 
 // ─── Vibe Logo ────────────────────────────────────────────────────────────────
 function VibeLogo() {
@@ -36,10 +39,8 @@ function HamburgerIcon() {
 function Navbar({ scrollY }: { scrollY: number }) {
   const scrolled = scrollY > 40;
   return (
-    <header
-      className="fixed top-5 left-1/2 -translate-x-1/2 z-50"
-      style={{ willChange: "transform" }}
-    >
+    <header className="fixed top-5 left-0 right-0 z-50" style={{ willChange: "transform" }}>
+      <LayoutContainer className="flex justify-center">
       <nav
         className="flex items-center gap-10 px-5 rounded-[70px] transition-all duration-500"
         style={{
@@ -77,6 +78,7 @@ function Navbar({ scrollY }: { scrollY: number }) {
           <HamburgerIcon />
         </button>
       </nav>
+      </LayoutContainer>
     </header>
   );
 }
@@ -94,15 +96,16 @@ function ScheduleCTA({ scrolled }: { scrolled: boolean }) {
       }}
     >
       <button
-        className="flex items-center gap-3 rounded-[62px] transition-all duration-300 hover:scale-[1.03]"
+        type="button"
+        className="group flex cursor-pointer items-center gap-4 rounded-[62px]"
         style={{
           backgroundColor: "white",
-          padding: "10px 18px 10px 10px",
+          padding: "6px 22px 6px 8px",
           boxShadow: "0 6px 30px rgba(0,0,0,0.13), 0 1px 6px rgba(0,0,0,0.06)",
         }}
       >
         {/* Profile image */}
-        <div className="w-[52px] h-[52px] rounded-full overflow-hidden shrink-0">
+        <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full">
           <img
             src={imgProfileImage1}
             alt="Team member"
@@ -112,18 +115,25 @@ function ScheduleCTA({ scrolled }: { scrolled: boolean }) {
 
         {/* Text */}
         <div className="flex flex-col items-start">
-          <span className="text-[15px] font-medium text-black leading-tight">
+          <span className="text-[13px] font-medium leading-tight text-black">
             Schedule now
           </span>
-          <div className="flex items-center gap-1 mt-0.5">
+          <div className="mt-0.5 flex items-center gap-1">
             <span
-              className="text-[13px] font-medium"
+              className="text-[11px] font-medium"
               style={{ color: "rgba(0,0,0,0.5)" }}
             >
               15 min call
             </span>
             {/* Caret */}
-            <svg width="7" height="11" viewBox="0 0 7 11" fill="none" className="opacity-50 rotate-0">
+            <svg
+              width="7"
+              height="11"
+              viewBox="0 0 7 11"
+              fill="none"
+              className="opacity-50 transition-transform duration-300 ease-out will-change-transform group-hover:translate-x-1"
+              aria-hidden
+            >
               <path d="M1 1L6 5.5L1 10" stroke="black" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </div>
@@ -136,6 +146,10 @@ function ScheduleCTA({ scrolled }: { scrolled: boolean }) {
 // ─── Hero Section ─────────────────────────────────────────────────────────────
 export function HeroLanding() {
   const [scrollY, setScrollY] = useState(0);
+  const { ref: heroIntroRef, inView: heroInView } = useInView<HTMLDivElement>({
+    once: true,
+    threshold: 0.25,
+  });
 
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
@@ -177,31 +191,37 @@ export function HeroLanding() {
             }}
           />
 
-          {/* Hero Text */}
-          <div className="relative z-10 flex flex-col items-center text-center px-6">
-            <h1
-              className="text-white mb-5"
+          <LayoutContainer className="relative z-10 flex justify-center">
+          <div
+            ref={heroIntroRef}
+            className="flex flex-col items-center text-center"
+          >
+            <RevealHeadline
+              as="h1"
+              inView={heroInView}
+              lines={["Senior design team", "Assembled for you."]}
+              className="text-white m-0 mb-8"
               style={{
                 fontWeight: 500,
                 fontSize: "clamp(40px, 5.5vw, 72px)",
                 lineHeight: 1.17,
                 letterSpacing: "-2px",
               }}
-            >
-              <span style={{ display: "block" }}>Senior design team</span>
-              <span style={{ display: "block" }}>Assembled for you.</span>
-            </h1>
-            <p
-              className="text-white/90"
+            />
+            <RevealHeadline
+              as="p"
+              inView={heroInView}
+              lines={["We turn product ideas into device-ready, coded prototypes"]}
+              staggerBaseDelayS={0.6}
+              className="m-0 max-w-[min(100%,42rem)] text-center text-white/90"
               style={{
                 fontWeight: 400,
                 fontSize: "clamp(15px, 1.8vw, 24px)",
                 lineHeight: 1.5,
               }}
-            >
-              We turn product ideas into device-ready, coded prototypes
-            </p>
+            />
           </div>
+          </LayoutContainer>
 
           {/* Scroll hint */}
           <div

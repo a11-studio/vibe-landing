@@ -4,6 +4,8 @@ import imgProfileImage  from "@/imports/MainContainer-2/99e69596bfd47f32feaf8f5f
 import imgProfileImage1 from "@/imports/MainContainer-2/7cdfc9cdb7fbe3d70aa2bee8d0424356fd95b0d6.png";
 import imgProfileImage2 from "@/imports/MainContainer-2/99cf73b51a4c59b3d9120e0891819b22ba7a2ac9.png";
 import imgProfileImage3 from "@/imports/MainContainer-2/791ff24325ad83485e0f9e7f0ccd0f68b2c07f3d.png";
+import { LayoutContainer } from "@/app/components/layout";
+import { RevealHeadline } from "@/app/components/RevealHeadline";
 // ─── Individual photo cards ───────────────────────────────────────────────────
 // Each card reproduces the Figma ImageContainer at fixed 446×490 output size.
 // We wrap in an aspect-ratio div so it scales responsively.
@@ -90,30 +92,24 @@ export function AboutSection() {
       className="relative w-full"
       style={{ backgroundColor: "rgba(228,222,219,0.6)" }}
     >
-      <div
-        className="mx-auto w-full"
+      <LayoutContainer
         style={{
-          maxWidth: 1920,
           paddingTop: "clamp(64px, 6.8vw, 131px)",
           paddingBottom: "clamp(80px, 8.5vw, 163px)",
-          paddingLeft: "clamp(16px, 2.1vw, 40px)",
-          paddingRight: "clamp(16px, 2.1vw, 40px)",
         }}
       >
-        {/* Headline */}
-        <h2
+        <RevealHeadline
+          lines={["Team is assembled from this bench —", "senior people from companies that ship."]}
           style={{
             fontWeight: 500,
             fontSize: "clamp(28px, 2.5vw, 48px)",
             color: "#013439",
             letterSpacing: "-0.063em",
             lineHeight: "normal",
+            margin: 0,
             marginBottom: "clamp(48px, 7vw, 134px)",
           }}
-        >
-          Team is assembled from this bench —<br />
-          senior people from companies that ship.
-        </h2>
+        />
 
         {/*
          * Desktop grid — mirrors Figma staggered layout:
@@ -172,7 +168,7 @@ export function AboutSection() {
             </div>
           ))}
         </div>
-      </div>
+      </LayoutContainer>
     </section>
   );
 }

@@ -1,6 +1,12 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
+  /* Figma layout: 12 cols, 1920 artboard, 40px margin, 20px gutter (Tailwind: max-w+px-10+gap-x-5) */
+  --layout-max-width: 1920px;
+  --layout-margin-x: 40px;
+  --layout-gutter: 20px;
+  --layout-columns: 12;
+
   --font-size: 16px;
   --background: #ffffff;
   --foreground: oklch(0.145 0 0);
@@ -178,5 +184,55 @@
     font-size: var(--text-base);
     font-weight: var(--font-weight-normal);
     line-height: 1.5;
+  }
+}
+
+/* Hlavné nadpisy: mask + slide-up; `.reveal-headline--visible` pristane pri scrollnutí (IntersectionObserver). */
+@keyframes reveal-headline-in {
+  from {
+    transform: translate3d(0, 115%, 0);
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.reveal-headline__mask {
+  display: block;
+  overflow: hidden;
+}
+
+/* Slovo = jedna inline maska; medzery sú textové uzly medzi maskami. */
+.reveal-headline__mask--inline {
+  display: inline-block;
+  max-width: 100%;
+  vertical-align: top;
+}
+
+.reveal-line-group {
+  display: block;
+}
+
+.reveal-headline__line {
+  display: block;
+  transform: translate3d(0, 115%, 0);
+}
+
+.reveal-headline--visible .reveal-headline__line {
+  animation: reveal-headline-in 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Druhý+ logický riadok: stagger len keď je celý riadok jedna maska (splitWords={false}) */
+.reveal-headline--no-split.reveal-headline--visible
+  .reveal-headline__mask
+  + .reveal-headline__mask
+  .reveal-headline__line {
+  animation-delay: 0.12s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-headline__line {
+    transform: none;
+    animation: none !important;
   }
 }
