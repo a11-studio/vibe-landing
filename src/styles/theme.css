@@ -277,3 +277,36 @@
     transition: none !important;
   }
 }
+
+/* Inline SVG dekor: hero pattern + footer kvet — spoločná animácia pathov */
+.svg-pattern-anim-root {
+  display: flex;
+  opacity: 0.92;
+}
+
+.svg-pattern-anim-root:not(.svg-pattern-anim-root--footer) {
+  align-items: stretch;
+  justify-content: flex-end;
+}
+
+.svg-pattern-anim-root--footer {
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.svg-pattern-anim-root .svg-pattern-anim-svg {
+  display: block;
+}
+
+.svg-pattern-anim-root:not(.svg-pattern-anim-root--footer) .svg-pattern-anim-svg {
+  height: 100%;
+  width: auto;
+  max-width: 100%;
+}
+
+.svg-pattern-anim-root--footer .svg-pattern-anim-svg {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+}

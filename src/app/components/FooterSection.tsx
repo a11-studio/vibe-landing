@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { LayoutContainer, LayoutGrid } from "@/app/components/layout";
 import { RevealHeadline } from "@/app/components/RevealHeadline";
 import svgPaths from "@/imports/Footer/svg-39tshfia8v";
-import flowerSrc from "@/assets/flower.svg?url";
+import { AnimatedSvgPattern } from "@/app/components/AnimatedSvgPattern";
+import flowerSvgRaw from "@/assets/flower.svg?raw";
 
 /** Figma footer 606:36065 — 1920×1216. Vertikál: CTA 200 ↓ 137 ↓ Prague 405, +28 time, +109 email+phone, kvet 423×560 od dna, nav 89 od spodku. */
 const FIGMA = {
@@ -68,15 +69,16 @@ function ArrowRight() {
   );
 }
 
-// ─── Flower: Figma 423×560, centered, from bottom edge ───────────────────────
+// ─── Flower: Figma 423×560, centered, from bottom edge (rovnaká anim. ako hero pattern) ─
 function FlowerSvg() {
   return (
-    <img
-      src={flowerSrc}
-      alt=""
-      className="h-full w-full object-contain object-bottom"
-      loading="lazy"
-      decoding="async"
+    <AnimatedSvgPattern
+      svgRaw={flowerSvgRaw}
+      variant="footer"
+      preserveAspectRatio="xMidYMax meet"
+      tickMs={420}
+      swapIntervalMs={2600}
+      className="h-full w-full"
     />
   );
 }

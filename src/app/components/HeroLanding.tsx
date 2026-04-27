@@ -3,7 +3,7 @@ import { useInView } from "@/app/hooks/useInView";
 import svgPaths from "@/imports/MainContainer/svg-mqtv51ktgp";
 import imgBackgroundImage from "@/imports/image.png";
 import imgHeadlineBlur from "@/imports/blur.png";
-import patternHero from "@/imports/Pattern.svg?url";
+import { HeroPattern } from "@/app/components/HeroPattern";
 import imgProfileImage1 from "@/imports/MainContainer/ecc192fa4213baaac273888921a1551274ec058a.png";
 import { LogosSection } from "@/app/components/LogosSection";
 import { ProcessSection } from "@/app/components/ProcessSection";
@@ -198,13 +198,7 @@ export function HeroLanding() {
             className="pointer-events-none absolute inset-y-0 right-0 z-[2] flex w-[min(38%,360px)] max-w-[32rem] translate-x-10 justify-end sm:w-[min(36%,380px)] sm:translate-x-12 md:w-[min(28%,420px)] md:translate-x-16 lg:translate-x-20 xl:translate-x-24"
             aria-hidden
           >
-            <img
-              src={patternHero}
-              alt=""
-              className="h-full w-auto max-w-full object-contain object-right opacity-[0.92]"
-              loading="eager"
-              decoding="async"
-            />
+            <HeroPattern tickMs={400} className="shrink-0" />
           </div>
 
           {/* Pattern — ľavý okraj (od md; silnejší posun doľava) */}
@@ -214,13 +208,7 @@ export function HeroLanding() {
           >
             <div className="h-full w-full -scale-x-100">
               <div className="flex h-full w-full justify-end">
-                <img
-                  src={patternHero}
-                  alt=""
-                  className="h-full w-auto max-w-full object-contain object-right opacity-[0.92]"
-                  loading="eager"
-                  decoding="async"
-                />
+                <HeroPattern tickMs={500} className="shrink-0" />
               </div>
             </div>
           </div>
