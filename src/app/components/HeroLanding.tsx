@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { useInView } from "@/app/hooks/useInView";
 import { cn } from "@/app/components/ui/utils";
 import svgPaths from "@/imports/MainContainer/svg-mqtv51ktgp";
@@ -89,16 +89,57 @@ const MOBILE_NAV = [
   { label: "Team", href: "#team" },
 ] as const;
 
+/** Postupnosť v paneli: odkazy → pauza → čiara (scaleX 0→1) → email → CTA */
+const MENU_PANEL_NAV_STAGGER_MS = 54;
+/** Pauza po poslednom odkaze pred čiarou */
+const MENU_PANEL_AFTER_NAV_MS = 88;
+const MENU_PANEL_LINE_DELAY_MS =
+  (MOBILE_NAV.length - 1) * MENU_PANEL_NAV_STAGGER_MS + MENU_PANEL_AFTER_NAV_MS;
+/** Ďalší krok po začatí čiary */
+const MENU_PANEL_AFTER_LINE_MS = 72;
+const MENU_PANEL_EMAIL_DELAY_MS = MENU_PANEL_LINE_DELAY_MS + MENU_PANEL_AFTER_LINE_MS;
+const MENU_PANEL_AFTER_EMAIL_MS = 70;
+const MENU_PANEL_CTA_DELAY_MS = MENU_PANEL_EMAIL_DELAY_MS + MENU_PANEL_AFTER_EMAIL_MS;
+
+const MENU_PANEL_BOTTOM_DURATION_MS = 560;
+/** Jemnejší „výdych“ na konci kroku — pôsobi menej plocho ako lineárny ease */
+const MENU_PANEL_EASE = "cubic-bezier(0.19, 1, 0.22, 1)";
+
 // ─── Biely zaoblený box pod pill barom (Figma 609:3277) ───────────────────────
 function NavMenuPanel({
   id,
   onRequestClose,
   ariaHidden,
+  animateIn,
 }: {
   id: string;
   onRequestClose: () => void;
   ariaHidden?: boolean;
+  animateIn: boolean;
 }) {
+  const [reveal, setReveal] = useState(false);
+
+  useEffect(() => {
+    if (!animateIn) return;
+    setReveal(false);
+    const id = requestAnimationFrame(() => {
+      requestAnimationFrame(() => setReveal(true));
+    });
+    return () => cancelAnimationFrame(id);
+  }, [animateIn]);
+
+  const ctaCssVars = {
+    ["--nav-cta-delay" as string]: `${MENU_PANEL_CTA_DELAY_MS}ms`,
+    ["--nav-cta-duration" as string]: `${MENU_PANEL_BOTTOM_DURATION_MS}ms`,
+    ["--nav-cta-ease" as string]: MENU_PANEL_EASE,
+  } as const;
+
+  const ruleCssVars = {
+    ["--nav-rule-delay" as string]: reveal ? `${MENU_PANEL_LINE_DELAY_MS}ms` : "0ms",
+    ["--nav-rule-duration" as string]: `${MENU_PANEL_BOTTOM_DURATION_MS}ms`,
+    ["--nav-rule-ease" as string]: MENU_PANEL_EASE,
+  } as const;
+
   return (
     <div
       id={id}
@@ -106,43 +147,76 @@ function NavMenuPanel({
       aria-modal="true"
       aria-hidden={ariaHidden ? true : undefined}
       aria-label="Site menu"
-      className="w-full max-w-[535px] rounded-[48px] bg-white px-6 py-10 sm:px-10 sm:py-12"
+      className="w-full rounded-[48px] bg-white px-6 py-10 sm:px-10 sm:py-12"
       style={{
         boxShadow:
           "0 24px 64px rgba(0,0,0,0.12), 0 8px 20px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04)",
       }}
       onClick={(e) => e.stopPropagation()}
     >
-      <nav className="flex flex-col items-center" aria-label="Primary">
-        <ul className="flex w-full max-w-[469px] flex-col items-center gap-12 sm:gap-16 list-none m-0 p-0">
-          {MOBILE_NAV.map((item) => (
+      <nav
+        className={cn(
+          "flex flex-col items-center",
+          reveal && "nav-menu-panel--visible",
+        )}
+        aria-label="Primary"
+      >
+        <ul className="m-0 flex w-full max-w-full list-none flex-col items-center gap-6 p-0 sm:gap-8">
+          {MOBILE_NAV.map((item, index) => (
             <li key={item.href}>
               <a
                 href={item.href}
                 className="block text-center text-[22px] font-medium leading-none text-black tracking-[-0.84px] transition-opacity duration-200 hover:opacity-50 sm:text-[28px]"
                 onClick={onRequestClose}
               >
-                {item.label}
+                <span className="nav-menu-panel__mask">
+                  <span
+                    className="nav-menu-panel__line"
+                    style={{
+                      animationDelay: reveal
+                        ? `${index * MENU_PANEL_NAV_STAGGER_MS}ms`
+                        : "0ms",
+                    }}
+                  >
+                    {item.label}
+                  </span>
+                </span>
               </a>
             </li>
           ))}
         </ul>
 
         <div
-          className="mt-10 h-px w-full max-w-[469px] bg-black/10 sm:mt-16"
+          className="nav-menu-panel__rule-track mt-6 w-full sm:mt-8"
+          style={ruleCssVars}
           aria-hidden
-        />
+        >
+          <div className="nav-menu-panel__rule" />
+        </div>
 
         <a
           href="mailto:vibestudio@design?subject=Hello"
           className="mt-8 text-center text-[16px] font-medium leading-none text-black tracking-[-0.54px] transition-opacity duration-200 hover:opacity-50 sm:mt-10 sm:text-[18px]"
         >
-          vibestudio@design
+          <span className="nav-menu-panel__mask">
+            <span
+              className="nav-menu-panel__line"
+              style={{
+                animationDelay: reveal ? `${MENU_PANEL_EMAIL_DELAY_MS}ms` : "0ms",
+              }}
+            >
+              vibestudio@design
+            </span>
+          </span>
         </a>
 
         <a
           href="mailto:vibestudio@design?subject=Schedule%20a%20call"
-          className="mt-8 inline-flex items-center justify-center rounded-[40px] bg-[#040404] px-6 py-3 text-[16px] font-medium leading-none text-white tracking-[-0.54px] transition-opacity duration-200 hover:opacity-90 sm:mt-10 sm:text-[18px]"
+          className={cn(
+            "nav-menu-panel__cta mt-8 inline-flex items-center justify-center rounded-[40px] bg-[#040404] px-6 py-3 text-[16px] font-medium leading-none text-white tracking-[-0.54px] sm:mt-10 sm:text-[18px]",
+            "hover:opacity-90 motion-reduce:hover:opacity-100",
+          )}
+          style={ctaCssVars}
           onClick={onRequestClose}
         >
           schedule a call
@@ -167,11 +241,23 @@ function Navbar({
   onMenuOpenChange: (open: boolean) => void;
 }) {
   const closeRef = useRef<HTMLButtonElement>(null);
+  const navRef = useRef<HTMLElement>(null);
+  const [navWidthPx, setNavWidthPx] = useState<number | null>(null);
   const [layerMounted, setLayerMounted] = useState(false);
   const [layerVisible, setLayerVisible] = useState(false);
   const scrolled = scrollY > 40;
   const layerOpen = menuOpen || layerMounted;
   const zHeader = layerOpen ? 100 : 50;
+
+  useLayoutEffect(() => {
+    const el = navRef.current;
+    if (!el) return;
+    const sync = () => setNavWidthPx(el.offsetWidth);
+    sync();
+    const ro = new ResizeObserver(sync);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   useEffect(() => {
     if (menuOpen) {
@@ -241,6 +327,7 @@ function Navbar({
       >
         <LayoutContainer className="flex w-full max-w-full flex-col items-center">
           <nav
+            ref={navRef}
             className="inline-flex max-w-full items-center gap-4 px-4 rounded-[70px] transition-all duration-500 sm:gap-10 sm:px-5"
             style={{
               minHeight: 54,
@@ -265,16 +352,16 @@ function Navbar({
             </a>
 
             <div className="hidden min-w-0 sm:flex sm:items-center sm:gap-10">
-              {["Process", "Work", "Team"].map((link) => (
+              {MOBILE_NAV.map((item) => (
                 <a
-                  key={link}
-                  href={`#${link.toLowerCase()}`}
+                  key={item.href}
+                  href={item.href}
                   className="text-[15px] font-medium text-black whitespace-nowrap transition-opacity duration-200 hover:opacity-50"
                   onClick={() => {
                     if (menuOpen) onMenuOpenChange(false);
                   }}
                 >
-                  {link}
+                  {item.label}
                 </a>
               ))}
             </div>
@@ -296,10 +383,11 @@ function Navbar({
           {layerMounted && (
             <div
               className={cn(
-                "mt-2 w-full max-w-[min(100%,535px)] will-change-transform sm:px-0",
+                "mt-2 min-w-0 will-change-transform sm:px-0",
                 "motion-reduce:transition-none",
                 "transition-[opacity,transform]",
                 "ease-[cubic-bezier(0.16,1,0.3,1)]",
+                navWidthPx == null && "w-full max-w-[min(100%,420px)]",
               )}
               style={{
                 transitionDuration: `${MENU_LAYER_MS}ms`,
@@ -308,12 +396,16 @@ function Navbar({
                   ? "translateY(0) scale(1)"
                   : "translateY(-10px) scale(0.98)",
                 pointerEvents: layerVisible ? "auto" : "none",
+                ...(navWidthPx != null
+                  ? { width: navWidthPx, maxWidth: "100%" }
+                  : undefined),
               }}
             >
               <NavMenuPanel
                 id={menuPanelId}
                 onRequestClose={() => onMenuOpenChange(false)}
                 ariaHidden={!layerVisible}
+                animateIn={layerVisible}
               />
             </div>
           )}

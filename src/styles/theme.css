@@ -53,6 +53,18 @@
   --sidebar-ring: oklch(0.708 0 0);
 }
 
+html {
+  scroll-behavior: smooth;
+  /* Pill bar ≈ top-5 + 54px + rezerva — anchor nezostane pod fixed headerom */
+  scroll-padding-top: 6rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
 .dark {
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
@@ -206,6 +218,8 @@
 .reveal-headline__mask {
   display: block;
   overflow: hidden;
+  /* Priestor pod líniou baseline — `overflow:hidden` inak orezá descendery (g, y, …) */
+  padding-bottom: 0.22em;
 }
 
 /* Slovo = jedna inline maska; medzery sú textové uzly medzi maskami. */
@@ -213,6 +227,7 @@
   display: inline-block;
   max-width: 100%;
   vertical-align: top;
+  padding-bottom: 0.22em;
 }
 
 .reveal-line-group {
@@ -238,6 +253,107 @@
 
 @media (prefers-reduced-motion: reduce) {
   .reveal-headline__line {
+    transform: none;
+    animation: none !important;
+  }
+}
+
+/* Dropdown menu: ten istý mask + slide-up ako reveal-headline; delay cez inline animation-delay */
+.nav-menu-panel__mask {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.22em;
+}
+
+.nav-menu-panel__line {
+  display: block;
+  transform: translate3d(0, 115%, 0);
+}
+
+.nav-menu-panel--visible .nav-menu-panel__line {
+  animation: reveal-headline-in 0.62s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Oddeľovacia čiara v paneli: „nakreslenie“ šírky 0 % → 100 % (scaleX) */
+@keyframes nav-menu-rule-in {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.nav-menu-panel__rule-track {
+  display: flex;
+  width: 100%;
+  max-width: 100%;
+  justify-content: center;
+}
+
+.nav-menu-panel__rule {
+  height: 1px;
+  width: 100%;
+  max-width: 100%;
+  background-color: rgb(0 0 0 / 0.1);
+  transform: scaleX(0);
+  transform-origin: center;
+}
+
+.nav-menu-panel--visible .nav-menu-panel__rule {
+  animation-name: nav-menu-rule-in;
+  animation-duration: var(--nav-rule-duration, 560ms);
+  animation-timing-function: var(
+    --nav-rule-ease,
+    cubic-bezier(0.19, 1, 0.22, 1)
+  );
+  animation-delay: var(--nav-rule-delay, 0ms);
+  animation-fill-mode: forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-menu-panel__rule {
+    transform: scaleX(1);
+    animation: none !important;
+  }
+
+  .nav-menu-panel__line {
+    transform: none;
+    animation: none !important;
+  }
+}
+
+@keyframes nav-menu-cta-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 20px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+/* CTA v paneli: výsuv zdola + opacity (spoľahlivejšie než transition pri batched React state) */
+.nav-menu-panel__cta {
+  opacity: 0;
+  transform: translate3d(0, 20px, 0);
+}
+
+.nav-menu-panel--visible .nav-menu-panel__cta {
+  animation-name: nav-menu-cta-in;
+  animation-duration: var(--nav-cta-duration, 560ms);
+  animation-timing-function: var(
+    --nav-cta-ease,
+    cubic-bezier(0.19, 1, 0.22, 1)
+  );
+  animation-delay: var(--nav-cta-delay, 0ms);
+  animation-fill-mode: forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-menu-panel__cta {
+    opacity: 1;
     transform: none;
     animation: none !important;
   }
