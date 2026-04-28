@@ -3,8 +3,6 @@ import { useInView } from "@/app/hooks/useInView";
 import { cn } from "@/app/components/ui/utils";
 import svgPaths from "@/imports/MainContainer/svg-mqtv51ktgp";
 import imgBackgroundImage from "@/imports/image.png";
-import imgHeadlineBlur from "@/imports/blur.png";
-import { HeroPattern } from "@/app/components/HeroPattern";
 import imgProfileImage1 from "@/imports/MainContainer/ecc192fa4213baaac273888921a1551274ec058a.png";
 import { LogosSection } from "@/app/components/LogosSection";
 import { ProcessSection } from "@/app/components/ProcessSection";
@@ -12,6 +10,7 @@ import { Process2Section } from "@/app/components/Process2Section";
 import { ProjectsSection } from "@/app/components/ProjectsSection";
 import { AboutSection } from "@/app/components/AboutSection";
 import { FooterSection } from "@/app/components/FooterSection";
+import { AsciiHeroBackground } from "@/app/components/AsciiHeroBackground";
 import { LayoutContainer } from "@/app/components/layout";
 import { RevealHeadline } from "@/app/components/RevealHeadline";
 
@@ -508,16 +507,10 @@ export function HeroLanding() {
           className="relative flex w-full items-center justify-center overflow-x-visible overflow-y-clip"
           style={{ minHeight: "100vh" }}
         >
-          {/* Background */}
-          <div className="absolute inset-0 z-0 pointer-events-none">
-            <img
-              src={imgBackgroundImage}
-              alt=""
-              className="w-full h-full object-cover"
-            />
-          </div>
+          {/* Background — ASCII pattern z fotky (widget.html) */}
+          <AsciiHeroBackground imageSrc={imgBackgroundImage} />
 
-          {/* Glow — pod patternami (z-[1]), inak rozmazanie prebíja biely pattern a pôsobí ako miznutie) */}
+          {/* Glow — z-[1] pod obsahom hero */}
           <div
             className="pointer-events-none absolute left-1/2 top-1/2 z-[1] w-[60%] max-w-[900px] -translate-x-1/2 -translate-y-1/2"
             style={{
@@ -530,38 +523,20 @@ export function HeroLanding() {
             aria-hidden
           />
 
-          {/* Pattern — right edge (silnejší posun doprava + užší pás) */}
-          <div
-            className="pointer-events-none absolute inset-y-0 right-0 z-[2] flex w-[min(38%,360px)] max-w-[32rem] translate-x-10 justify-end sm:w-[min(36%,380px)] sm:translate-x-12 md:w-[min(28%,420px)] md:translate-x-16 lg:translate-x-20 xl:translate-x-24"
-            aria-hidden
-          >
-            <HeroPattern tickMs={400} className="shrink-0" />
-          </div>
-
-          {/* Pattern — ľavý okraj (od md; silnejší posun doľava) */}
-          <div
-            className="pointer-events-none absolute inset-y-0 left-0 z-[2] hidden w-[min(38%,360px)] max-w-[32rem] -translate-x-10 sm:w-[min(36%,380px)] sm:-translate-x-12 md:block md:w-[min(28%,420px)] md:-translate-x-16 lg:-translate-x-20 xl:-translate-x-24"
-            aria-hidden
-          >
-            <div className="h-full w-full -scale-x-100">
-              <div className="flex h-full w-full justify-end">
-                <HeroPattern tickMs={500} className="shrink-0" />
-              </div>
-            </div>
-          </div>
-
           <LayoutContainer className="relative z-10 flex justify-center">
           <div
             ref={heroIntroRef}
             className="flex flex-col items-center text-center"
           >
-            {/* Vrstva pod hlavný nadpis — blur.png na plnú šírku, negat. inset = väčšia plocha za okrajom textu */}
+            {/* Vrstva pod hlavný nadpis — mäkký glow #8CC5FB (negat. inset = väčšia plocha za okrajom textu) */}
             <div className="relative isolate mb-4 w-full sm:mb-5">
-              <img
-                src={imgHeadlineBlur}
-                alt=""
-                className="pointer-events-none absolute -inset-6 object-cover object-center sm:-inset-8 md:-inset-10 lg:-inset-12"
-                loading="eager"
+              <div
+                className="pointer-events-none absolute -inset-6 z-0 sm:-inset-8 md:-inset-10 lg:-inset-12"
+                style={{
+                  background: "#8CC5FB",
+                  filter: "blur(72px)",
+                  opacity: 0.72,
+                }}
                 aria-hidden
               />
               <div className="relative z-10 px-6 pt-5 pb-4 sm:px-9 sm:pt-6 sm:pb-4 md:px-12 md:pt-7 md:pb-5 lg:px-14 lg:pt-8 lg:pb-5">
@@ -579,30 +554,25 @@ export function HeroLanding() {
                 />
               </div>
             </div>
+          </div>
+          </LayoutContainer>
+
+          <div
+            className="absolute bottom-8 left-1/2 z-10 w-full max-w-[min(100%,520px)] -translate-x-1/2 px-[clamp(24px,2.1vw,40px)] transition-opacity duration-300 sm:px-6"
+            style={{ opacity: scrollY > 60 ? 0 : 1 }}
+          >
             <RevealHeadline
               as="p"
               inView={heroInView}
               lines={["We turn product ideas into device-ready, coded prototypes"]}
               staggerBaseDelayS={0.6}
-              className="m-0 max-w-[min(100%,42rem)] text-center text-white/90"
+              className="m-0 text-center text-white/90"
               style={{
                 fontWeight: 400,
                 fontSize: "clamp(15px, 1.8vw, 24px)",
                 lineHeight: 1.5,
               }}
             />
-          </div>
-          </LayoutContainer>
-
-          {/* Scroll hint */}
-          <div
-            className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-1.5 transition-opacity duration-300"
-            style={{ opacity: scrollY > 60 ? 0 : 1 }}
-          >
-            <span className="text-white/50 text-xs tracking-widest uppercase">
-              Scroll
-            </span>
-            <div className="w-px h-8 bg-white/30 animate-pulse" />
           </div>
         </section>
 
