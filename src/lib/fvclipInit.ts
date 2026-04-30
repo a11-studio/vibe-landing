@@ -7,14 +7,18 @@ export type FvclipApi = {
   root: HTMLElement;
   setVideoSrc: (src: string) => void;
   relayout: () => void;
+  /** 0–1 = čas videa pri scroll-driven režime */
+  setScrollProgress: (p: number) => void;
   destroy: () => void;
 };
 
 export type InitFvclipOptions = {
   /** Overrides data-fvclip-src */
   videoSrc?: string;
-  /** Default true for ambient footer */
+  /** Default true unless scrollDriven */
   loop?: boolean;
+  /** Čas videa riadi scroll (žiadny autoplay / rAF loop) */
+  scrollDriven?: boolean;
 };
 
 function qs(root: HTMLElement, name: string): HTMLInputElement | null {
@@ -27,7 +31,8 @@ export function initFvclip(
 ): FvclipApi | null {
   if (!root) return null;
 
-  const loopVideo = options.loop !== false;
+  const loopVideo = options.scrollDriven ? false : options.loop !== false;
+  const scrollDriven = options.scrollDriven === true;
   const defaultVideoSrc =
     options.videoSrc ||
     root.getAttribute("data-fvclip-src") ||
@@ -119,7 +124,7 @@ export function initFvclip(
   }
 
   function startVideoPreviewLoop(): void {
-    if (destroyed) return;
+    if (destroyed || scrollDriven) return;
     if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
     stopVideoPreviewLoop();
     videoPreviewRaf = requestAnimationFrame(videoPreviewTick);
@@ -144,6 +149,11 @@ export function initFvclip(
 
   function clamp(v: number, lo: number, hi: number): number {
     return Math.max(lo, Math.min(hi, v));
+  }
+
+  function smooth01(t: number): number {
+    const x = clamp(t, 0, 1);
+    return x * x * (3 - 2 * x);
   }
 
   function getBackingDpr(): number {
@@ -300,16 +310,31 @@ export function initFvclip(
     return clamp(x * 255 + b, 0, 255);
   }
 
-  function mapCellToGlyph(L_adj: number, edgeNorm: number, edgeInfl: number): string {
+  /** Spojitý index 0…3 medzi . : o O — pre crossfade namiesto ostrých skokov. */
+  function toneToContinuousGlyphIndex(L_adj: number, edgeNorm: number, edgeInfl: number): number {
     const t = L_adj / 255;
     const e = edgeNorm;
     const boost = e * edgeInfl * 0.42;
     const tone = clamp(t + boost, 0, 1);
+    const a = 0.11;
+    const b = 0.26;
+    const c = 0.62;
+    if (tone <= a) return a > 1e-6 ? (tone / a) * 1 : 0;
+    if (tone <= b) return 1 + (tone - a) / (b - a);
+    if (tone <= c) return 2 + (tone - b) / (c - b);
+    return 3;
+  }
 
-    if (tone < 0.11) return ".";
-    if (tone < 0.26) return ":";
-    if (tone < 0.62) return "o";
-    return "O";
+  function glyphLayersForToneIndex(idx: number): Array<{ ch: string; alpha: number }> {
+    const glyphs = [".", ":", "o", "O"] as const;
+    const i0 = clamp(Math.floor(idx), 0, 3);
+    const i1 = clamp(Math.ceil(idx), 0, 3);
+    if (i0 === i1) return [{ ch: glyphs[i0]!, alpha: 1 }];
+    const f = smooth01(idx - i0);
+    return [
+      { ch: glyphs[i0]!, alpha: 1 - f },
+      { ch: glyphs[i1]!, alpha: f },
+    ];
   }
 
   function cellHash(gx: number, gy: number): number {
@@ -322,7 +347,15 @@ export function initFvclip(
     const w = state.displaySize.w;
     const h = state.displaySize.h;
     const cells: typeof state.asciiCells = [];
-    if (!state.media || w < 1 || state.media.readyState < 2) {
+    if (!state.media || w < 1) {
+      state.asciiCells = cells;
+      return cells;
+    }
+    // Počas seeku môže readyState klesnúť — nevymaž overlay (inak zmiznú všetky glyfy).
+    if (state.media.readyState < 2) {
+      if (scrollDriven && state.asciiCells.length > 0) {
+        return state.asciiCells;
+      }
       state.asciiCells = cells;
       return cells;
     }
@@ -358,7 +391,6 @@ export function initFvclip(
     let combined: number;
     let thresh: number;
     let placeRoll: number;
-    let ch: string;
     const edgeInfl = numInput(els.edgeInfluence, 0.42);
 
     const exclusionOn = els.colorExclusionEnabled?.checked ?? false;
@@ -414,15 +446,21 @@ export function initFvclip(
           if (allowOnly < 1 && cellHash(gx + 337, gy + 619) > allowOnly) continue;
         }
 
-        ch = mapCellToGlyph(L_adj, edge, edgeInfl);
+        const toneIdx = toneToContinuousGlyphIndex(L_adj, edge, edgeInfl);
+        const layers = glyphLayersForToneIndex(toneIdx);
 
         const toneVis = L_adj / 255;
-        cells.push({
-          cx,
-          cy,
-          char: ch,
-          localOpacity: 0.88 + 0.12 * (1 - Math.abs(0.5 - toneVis)),
-        });
+        const baseOp = 0.88 + 0.12 * (1 - Math.abs(0.5 - toneVis));
+        for (let li = 0; li < layers.length; li++) {
+          const layer = layers[li]!;
+          if (layer.alpha < 0.02) continue;
+          cells.push({
+            cx,
+            cy,
+            char: layer.ch,
+            localOpacity: baseOp * layer.alpha,
+          });
+        }
       }
     }
 
@@ -507,8 +545,14 @@ export function initFvclip(
       state.media = v;
       layoutTargetW = readLayoutTargetWidth();
       fitCanvasToMedia();
-      renderCanvas();
       ensureVideoSilent(v);
+      if (scrollDriven) {
+        v.pause();
+        v.currentTime = 0;
+        renderCanvas();
+        return;
+      }
+      renderCanvas();
       const playAttempt = v.play();
       if (playAttempt && typeof playAttempt.then === "function") {
         playAttempt
@@ -528,6 +572,11 @@ export function initFvclip(
   }
 
   function onPlay(): void {
+    if (scrollDriven) {
+      stopVideoPreviewLoop();
+      els.srcVideo.pause();
+      return;
+    }
     ensureVideoSilent(els.srcVideo);
     startVideoPreviewLoop();
   }
@@ -545,6 +594,12 @@ export function initFvclip(
   els.srcVideo.addEventListener("ended", onEnded);
 
   function onReduceMotion(): void {
+    if (scrollDriven) {
+      stopVideoPreviewLoop();
+      els.srcVideo.pause();
+      renderCanvas();
+      return;
+    }
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       els.srcVideo.pause();
       stopVideoPreviewLoop();
@@ -573,8 +628,66 @@ export function initFvclip(
   state.displaySize.w = Math.max(320, layoutTargetW);
   state.displaySize.h = Math.round((state.displaySize.w * 9) / 16);
 
+  let scrollSeekToken = 0;
+
   if (defaultVideoSrc) loadVideo(defaultVideoSrc);
   else renderCanvas();
+
+  function applyScrollProgress(p: number): void {
+    if (destroyed || !scrollDriven) return;
+    const v = els.srcVideo;
+    if (!state.media || v.readyState < 1) return;
+    const d = v.duration;
+    if (!Number.isFinite(d) || d <= 0) return;
+    stopVideoPreviewLoop();
+    v.pause();
+    const t = clamp(p, 0, 1) * d;
+
+    const renderAfterSeek = (): void => {
+      if (destroyed) return;
+      renderCanvas();
+    };
+
+    if (Math.abs(v.currentTime - t) < 0.001) {
+      renderAfterSeek();
+      return;
+    }
+
+    const token = ++scrollSeekToken;
+
+    const tryRenderIfCurrent = (): void => {
+      if (destroyed || token !== scrollSeekToken) return;
+      renderCanvas();
+    };
+
+    const onSeeked = (): void => {
+      tryRenderIfCurrent();
+    };
+    v.addEventListener("seeked", onSeeked, { once: true });
+    v.currentTime = t;
+
+    // Počas rýchleho scrollu sa `seeked` často oneskorí alebo sa starý handler zruší;
+    // bez medzirendrov canvas stojí až do konca seekingu. Taháme frame hneď po seeku.
+    type VWithRvfc = HTMLVideoElement & {
+      requestVideoFrameCallback?: (cb: DOMHighResTimeStampCallback) => number;
+    };
+    const rvfc = (v as VWithRvfc).requestVideoFrameCallback;
+    if (typeof rvfc === "function") {
+      rvfc.call(v, () => {
+        tryRenderIfCurrent();
+      });
+    }
+
+    requestAnimationFrame(() => {
+      tryRenderIfCurrent();
+      requestAnimationFrame(tryRenderIfCurrent);
+    });
+
+    window.setTimeout(() => {
+      if (destroyed || token !== scrollSeekToken) return;
+      tryRenderIfCurrent();
+    }, 120);
+  }
 
   return {
     root,
@@ -589,6 +702,9 @@ export function initFvclip(
         fitCanvasToMedia();
         renderCanvas();
       }
+    },
+    setScrollProgress(p: number) {
+      applyScrollProgress(p);
     },
     destroy() {
       if (destroyed) return;

@@ -75,7 +75,7 @@ export function FooterSection() {
 
   return (
     <footer
-      className="relative flex w-full min-h-[clamp(920px,98svh,1380px)] flex-col overflow-x-clip sm:min-h-[clamp(760px,86svh,1280px)]"
+      className="sticky bottom-0 z-20 relative flex w-full min-h-[clamp(920px,98svh,1380px)] flex-col overflow-x-clip sm:min-h-[clamp(760px,86svh,1280px)]"
       style={{ backgroundColor: FIGMA.bg }}
     >
       {/* ASCII kvet: od spodku + polovica výšky + „rezerva“ hore = orez len pod spodkom po translate. */}

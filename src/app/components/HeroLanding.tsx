@@ -596,7 +596,12 @@ export function HeroLanding() {
 
         <CompetitorSection />
 
-        <FooterSection />
+        {/*
+          Samostatný blok pre sticky footer (nie celá stránka ako containing block).
+        */}
+        <div className="relative w-full bg-[var(--logos-canvas)]">
+          <FooterSection />
+        </div>
       </div>
 
       <ScheduleCTA scrolled={scrollY > 40} />
