@@ -1,16 +1,16 @@
 import { useEffect, useState } from "react";
 import { LayoutContainer, LayoutGrid } from "@/app/components/layout";
+import { FooterFlowerFvclip } from "@/app/components/FooterFlowerFvclip";
 import { RevealHeadline } from "@/app/components/RevealHeadline";
 import svgPaths from "@/imports/Footer/svg-39tshfia8v";
-import { AnimatedSvgPattern } from "@/app/components/AnimatedSvgPattern";
-import flowerSvgRaw from "@/assets/flower.svg?raw";
 
-/** Figma footer 606:36065 — 1920×1216. Vertikál: CTA 200 ↓ 137 ↓ Prague 405, +28 time, +109 email+phone, kvet 423×560 od dna, nav 89 od spodku. */
+/** Figma footer — farba pozadia. */
 const FIGMA = {
   bg: "var(--logos-canvas)",
-  flowerW: 423,
-  flowerH: 560,
 } as const;
+
+/** Posun kvetu nadol; zóna je predĺžená o rovnaký px smerom hore → `overflow-hidden` orezá len spodok, nie vrchol. */
+const FLOWER_SHIFT_DOWN_PX = 100;
 
 // ─── Live Prague time ─────────────────────────────────────────────────────────
 function usePragueTime() {
@@ -69,20 +69,6 @@ function ArrowRight() {
   );
 }
 
-// ─── Flower: Figma 423×560, centered, from bottom edge (rovnaká anim. ako hero pattern) ─
-function FlowerSvg() {
-  return (
-    <AnimatedSvgPattern
-      svgRaw={flowerSvgRaw}
-      variant="footer"
-      preserveAspectRatio="xMidYMax meet"
-      tickMs={420}
-      swapIntervalMs={2600}
-      className="h-full w-full"
-    />
-  );
-}
-
 // ─── Footer Section — Figma 606:36065 ───────────────────────────────────────
 export function FooterSection() {
   const pragueTime = usePragueTime();
@@ -92,23 +78,17 @@ export function FooterSection() {
       className="relative flex w-full min-h-[clamp(920px,98svh,1380px)] flex-col overflow-x-clip sm:min-h-[clamp(760px,86svh,1280px)]"
       style={{ backgroundColor: FIGMA.bg }}
     >
+      {/* ASCII kvet: od spodku + polovica výšky + „rezerva“ hore = orez len pod spodkom po translate. */}
       <div
-        className="pointer-events-none absolute inset-x-0 bottom-0 z-0 flex justify-center"
-        style={{
-          height: "min(55vh, 600px)",
-          maxHeight: 600,
-        }}
+        className="pointer-events-none absolute bottom-0 left-0 right-0 z-0 flex items-end justify-center overflow-hidden"
+        style={{ top: `calc(50% - ${FLOWER_SHIFT_DOWN_PX}px)` }}
         aria-hidden
       >
         <div
-          className="h-full w-full"
-          style={{
-            maxWidth: `min(88vw, ${FIGMA.flowerW}px)`,
-            maxHeight: FIGMA.flowerH,
-            aspectRatio: `${FIGMA.flowerW} / ${FIGMA.flowerH}`,
-          }}
+          className="w-full max-w-[min(96vw,1200px)]"
+          style={{ transform: `translateY(${FLOWER_SHIFT_DOWN_PX}px)` }}
         >
-          <FlowerSvg />
+          <FooterFlowerFvclip className="w-full" />
         </div>
       </div>
 
