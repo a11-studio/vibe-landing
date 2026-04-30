@@ -7,7 +7,7 @@ import flowerSvgRaw from "@/assets/flower.svg?raw";
 
 /** Figma footer 606:36065 — 1920×1216. Vertikál: CTA 200 ↓ 137 ↓ Prague 405, +28 time, +109 email+phone, kvet 423×560 od dna, nav 89 od spodku. */
 const FIGMA = {
-  bg: "#1c1310",
+  bg: "var(--logos-canvas)",
   flowerW: 423,
   flowerH: 560,
 } as const;
@@ -89,14 +89,14 @@ export function FooterSection() {
 
   return (
     <footer
-      className="relative flex w-full min-h-[clamp(780px,92svh,1200px)] flex-col overflow-x-clip sm:min-h-[clamp(600px,76svh,1100px)]"
+      className="relative flex w-full min-h-[clamp(920px,98svh,1380px)] flex-col overflow-x-clip sm:min-h-[clamp(760px,86svh,1280px)]"
       style={{ backgroundColor: FIGMA.bg }}
     >
       <div
         className="pointer-events-none absolute inset-x-0 bottom-0 z-0 flex justify-center"
         style={{
-          height: "min(50vh, 560px)",
-          maxHeight: 560,
+          height: "min(55vh, 600px)",
+          maxHeight: 600,
         }}
         aria-hidden
       >
@@ -113,14 +113,14 @@ export function FooterSection() {
       </div>
 
       <LayoutContainer
-        className="relative z-10 flex flex-1 flex-col [padding-bottom:max(1.5rem,env(safe-area-inset-bottom,0px))]"
+        className="relative z-10 flex flex-1 flex-col [padding-bottom:max(2rem,env(safe-area-inset-bottom,0px))]"
         style={{
-          paddingTop: "clamp(72px, 8vw, 140px)",
+          paddingTop: "clamp(96px, 10vw, 180px)",
         }}
       >
         <LayoutGrid className="flex-1 content-start">
           <div
-            className="col-span-12 sm:col-start-2 sm:col-span-5"
+            className="col-span-12 sm:col-span-5"
             style={{
               display: "flex",
               flexDirection: "column",
@@ -154,7 +154,7 @@ export function FooterSection() {
 
             <div
               style={{
-                marginTop: "clamp(96px, 10vw, 180px)",
+                marginTop: "clamp(120px, 12vw, 220px)",
               }}
             >
               <p
@@ -184,7 +184,7 @@ export function FooterSection() {
 
             <div
               className="flex max-w-[320px] flex-col gap-2 max-sm:mb-2 max-sm:pb-2"
-              style={{ marginTop: "clamp(48px, 5.6vw, 109px)" }}
+              style={{ marginTop: "clamp(64px, 7vw, 140px)" }}
             >
               <a
                 href="mailto:vibestudio@design"
@@ -218,8 +218,8 @@ export function FooterSection() {
           </div>
         </LayoutGrid>
 
-        <LayoutGrid className="relative z-20 mt-auto pt-[clamp(64px,11vw,112px)] sm:pt-[clamp(48px,7vw,112px)]">
-          <div className="col-span-12 flex flex-col items-start gap-6 sm:col-start-2 sm:col-span-10 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+        <LayoutGrid className="relative z-20 mt-auto pt-[clamp(88px,14vw,148px)] sm:pt-[clamp(72px,10vw,148px)]">
+          <div className="col-span-12 flex flex-col items-start gap-6 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
             <VibeLogoWhite />
             <nav className="flex w-full max-md:flex-nowrap max-md:justify-between max-md:gap-0 items-center gap-x-6 gap-y-2 sm:w-auto sm:justify-start sm:gap-8">
               {(

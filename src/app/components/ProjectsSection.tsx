@@ -1,14 +1,38 @@
-import imgSilencio    from "figma:asset/d0cc88609464830db5a519803d66b943f3a8741e.png";
-import imgRealitiez   from "figma:asset/e456a14899251227c4ec37785838c3ea552f7971.png";
+import { useEffect, useState } from "react";
+import imgBanner from "@/assets/banner.png";
+import imgRege from "@/assets/rege.png";
+import imgSelfcheckPhoto from "@/assets/selfcheck.png";
+import imgSilencio from "figma:asset/d0cc88609464830db5a519803d66b943f3a8741e.png";
+import imgRealitiez from "figma:asset/e456a14899251227c4ec37785838c3ea552f7971.png";
 import imgAccuWeather from "figma:asset/ccbe4b5cf5687edf1efe0a848055c6d13b9a393f.png";
-import imgSelfCheck   from "figma:asset/a09f93abcab1572bed25b1d59de6c0f2be87884a.png";
-import imgSpotify     from "figma:asset/5befbd932cd55a328c20d0b015fe5afc87e4ad6f.png";
-import { LayoutContainer } from "@/app/components/layout";
-import { RevealHeadline } from "@/app/components/RevealHeadline";
-import { ArrowIcon } from "@/app/components/shared/ArrowIcon";
+import imgSpotify from "figma:asset/5befbd932cd55a328c20d0b015fe5afc87e4ad6f.png";
+import { LayoutContainer, LayoutGrid } from "@/app/components/layout";
+import { useInView } from "@/app/hooks/useInView";
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
-const PROJECTS = [
+/** Výška média v druhom riadku (AccuWeather · SelfCheck · Rege) — Figma cca 325px. */
+const MEDIUM_ROW_IMAGE_PX = 325;
+
+const METRIC_COUNT_START = 10;
+const METRIC_COUNT_END = 25;
+const METRIC_COUNT_MS = 1500;
+
+function easeOutCubic(t: number): number {
+  return 1 - (1 - t) ** 3;
+}
+
+type ProjectEntry = {
+  name: string;
+  description: string;
+  tags: string[];
+  image: string;
+  /** Voliteľný CSS aspect-ratio, ak nie je `imageHeightPx`. */
+  imageAspect?: string;
+  /** Pevná výška obrázka (px) — zarovnanie v jednom riadku. */
+  imageHeightPx?: number;
+};
+
+const PROJECTS: ProjectEntry[] = [
   {
     name: "Silencio",
     description:
@@ -29,13 +53,23 @@ const PROJECTS = [
       "A cleaner, more focused product direction designed to simplify how users understand forecasts, conditions, and real-time weather data.",
     tags: ["UX/UI Design", "Animation"],
     image: imgAccuWeather,
+    imageHeightPx: MEDIUM_ROW_IMAGE_PX,
   },
   {
     name: "SelfCheck",
     description:
       "An interactive product concept designed to turn self-reflection into structured, engaging experiences through guided quizzes and feedback loops.",
-    tags: ["UX/UI Design", "Interaction Design", "Prototype"],
-    image: imgSelfCheck,
+    tags: ["Interaction Design", "Prototype"],
+    image: imgSelfcheckPhoto,
+    imageHeightPx: MEDIUM_ROW_IMAGE_PX,
+  },
+  {
+    name: "Rege Riders",
+    description:
+      "Visual identity and product UI for a rider-focused platform — clear navigation, bold brand presence, and a tactile feel built for motion and community.",
+    tags: ["UX/UI Design", "Brand lifting"],
+    image: imgRege,
+    imageHeightPx: MEDIUM_ROW_IMAGE_PX,
   },
   {
     name: "Spotify (Apple Vision)",
@@ -46,22 +80,18 @@ const PROJECTS = [
   },
 ];
 
-// ─── Tag pill ──────────────────────────────────────────────────────────────────
-function Tag({ label }: { label: string }) {
+// ─── Tag — Figma 621:22379: jemný svetlý pás na tmavom pozadí ────────────────
+function ProjectTag({ label }: { label: string }) {
   return (
     <span
+      className="inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded-[50px] px-4 py-2"
       style={{
-        display: "inline-flex",
-        alignItems: "center",
-        backgroundColor: "#edfafc",
-        color: "#013439",
+        backgroundColor: "rgba(255, 255, 255, 0.1)",
+        color: "#ffffff",
         fontWeight: 500,
-        fontSize: 14,
-        letterSpacing: "-0.42px",
+        fontSize: 16,
+        letterSpacing: "-0.48px",
         lineHeight: "24px",
-        padding: "6px 14px",
-        borderRadius: 50,
-        whiteSpace: "nowrap",
       }}
     >
       {label}
@@ -69,132 +99,296 @@ function Tag({ label }: { label: string }) {
   );
 }
 
-// ─── Project row ──────────────────────────────────────────────────────────────
-interface ProjectRowProps {
-  name: string;
-  description: string;
-  tags: string[];
-  image: string;
-}
-
-function ProjectRow({ name, description, tags, image }: ProjectRowProps) {
+function ProjectCardText({ project }: { project: ProjectEntry }) {
   return (
-    <div
-      className="flex w-full flex-col gap-[clamp(24px,3vw,48px)] max-md:rounded-md max-md:bg-white max-md:p-4 max-md:shadow-sm md:flex-row md:items-start md:bg-transparent md:px-0 md:py-[clamp(32px,4vw,78px)] md:shadow-none"
-    >
-        {/* Left — text: full width on small screens, fixed column from md (Figma) */}
-        <div
-          className="flex min-w-0 w-full shrink-0 flex-col md:w-[clamp(220px,28%,430px)]"
-          style={{
-            gap: 16,
-            paddingTop: 6,
-          }}
-        >
-          {/* Project name */}
-          <h3
-            style={{
-              fontWeight: 500,
-              fontSize: "clamp(28px, 2.5vw, 48px)",
-              color: "#013439",
-              letterSpacing: "-0.063em",
-              lineHeight: "normal",
-              margin: 0,
-            }}
-          >
-            {name}
-          </h3>
-
-          {/* Description */}
-          <p
-            style={{
-              fontWeight: 500,
-              fontSize: 15,
-              color: "#616161",
-              letterSpacing: "-0.45px",
-              lineHeight: "24px",
-              margin: 0,
-            }}
-          >
-            {description}
-          </p>
-
-          {/* Tags */}
-          <div className="flex flex-wrap gap-2 mt-1">
-            {tags.map((tag) => (
-              <Tag key={tag} label={tag} />
-            ))}
-          </div>
-        </div>
-
-        {/* Right — image */}
-        <div className="flex-1 min-w-0 overflow-hidden" style={{ borderRadius: 4 }}>
-          <img
-            src={image}
-            alt={name}
-            className="w-full h-auto block object-cover"
-            style={{ aspectRatio: "1064 / 577" }}
-          />
-        </div>
+    <div className="flex min-w-0 flex-col gap-4 text-left">
+      <h3
+        className="m-0"
+        style={{
+          fontWeight: 500,
+          fontSize: "clamp(28px, 2.2vw, 48px)",
+          color: "#ffffff",
+          letterSpacing: "-3px",
+          lineHeight: "normal",
+        }}
+      >
+        {project.name}
+      </h3>
+      <p
+        className="m-0 max-w-[430px]"
+        style={{
+          fontWeight: 500,
+          fontSize: 16,
+          color: "rgba(255, 255, 255, 0.6)",
+          letterSpacing: "-0.48px",
+          lineHeight: "24px",
+        }}
+      >
+        {project.description}
+      </p>
+      <div className="flex flex-wrap gap-2">
+        {project.tags.map((tag) => (
+          <ProjectTag key={tag} label={tag} />
+        ))}
+      </div>
     </div>
   );
 }
 
-// ─── Section ──────────────────────────────────────────────────────────────────
+/** Silencio + Realitiez: spodné hrany obrázkov v jednej rovine — Realitiez je len posunutý nadol (`items-end` / `self-end`), obrázky bez natiahnutia orezania. */
+function ProjectsRow1Aligned({ left, right }: { left: ProjectEntry; right: ProjectEntry }) {
+  return (
+    <div className="col-span-12 flex w-full flex-col gap-6 md:gap-8">
+      <div className="grid w-full grid-cols-12 gap-x-5">
+        <div
+          className="col-span-12 w-full overflow-hidden md:col-span-7 md:self-start"
+          style={{ borderRadius: 4 }}
+        >
+          <img
+            src={left.image}
+            alt=""
+            className="block aspect-[1064/576] w-full object-cover"
+          />
+        </div>
+        <div className="hidden min-h-px md:col-span-1 md:block" aria-hidden />
+        <div className="col-span-12 w-full md:col-span-4 md:self-end">
+          <div className="w-full overflow-hidden" style={{ borderRadius: 4 }}>
+            <img
+              src={right.image}
+              alt=""
+              className="block aspect-[600/325] w-full object-cover"
+            />
+          </div>
+        </div>
+      </div>
+      <div className="grid w-full grid-cols-12 gap-x-5">
+        <div className="col-span-12 md:col-span-7">
+          <ProjectCardText project={left} />
+        </div>
+        <div className="hidden min-h-px md:col-span-1 md:block" aria-hidden />
+        <div className="col-span-12 md:col-span-4">
+          <ProjectCardText project={right} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Spotify + metrika (+25 M): rovnaké zarovnanie ako Silencio/Realitiez — spodky vizuálov v jednej rovine. */
+function ProjectsRow3SpotifyMetric({
+  project,
+  metricBackgroundImage,
+}: {
+  project: ProjectEntry;
+  metricBackgroundImage: string;
+}) {
+  return (
+    <div className="col-span-12 flex w-full flex-col gap-6 md:gap-8">
+      <div className="grid w-full grid-cols-12 gap-x-5">
+        <div
+          className="col-span-12 w-full overflow-hidden md:col-span-7 md:self-start"
+          style={{ borderRadius: 4 }}
+        >
+          <img
+            src={project.image}
+            alt=""
+            className="block aspect-[1064/576] w-full object-cover"
+          />
+        </div>
+        <div className="hidden min-h-px md:col-span-1 md:block" aria-hidden />
+        <div className="col-span-12 w-full md:col-span-4 md:self-end">
+          <ProjectsMetricCard backgroundImage={metricBackgroundImage} />
+        </div>
+      </div>
+      <div className="grid w-full grid-cols-12 gap-x-5">
+        <div className="col-span-12 md:col-span-7">
+          <ProjectCardText project={project} />
+        </div>
+        <div className="hidden min-h-px md:col-span-1 md:block" aria-hidden />
+        <div className="hidden md:col-span-4 md:block" aria-hidden />
+      </div>
+    </div>
+  );
+}
+
+type ProjectCardSize = "large" | "medium";
+
+function ProjectCard({
+  project,
+  size,
+}: {
+  project: ProjectEntry;
+  size: ProjectCardSize;
+}) {
+  const aspectDefault = size === "large" ? "1064 / 576" : "600 / 325";
+  const aspect = project.imageAspect ?? aspectDefault;
+  const fixedH = project.imageHeightPx;
+
+  return (
+    <article className="flex w-full min-w-0 flex-col gap-6 md:gap-8">
+      <div className="w-full overflow-hidden" style={{ borderRadius: 4 }}>
+        {fixedH != null ? (
+          <img
+            src={project.image}
+            alt=""
+            className="block w-full object-cover"
+            style={{ height: fixedH, maxHeight: fixedH }}
+          />
+        ) : (
+          <img
+            src={project.image}
+            alt=""
+            className="block h-auto w-full object-cover"
+            style={{ aspectRatio: aspect }}
+          />
+        )}
+      </div>
+      <ProjectCardText project={project} />
+    </article>
+  );
+}
+
+function ProjectsMetricCard({ backgroundImage }: { backgroundImage: string }) {
+  const { ref, inView } = useInView({ threshold: 0.32, once: true });
+  const [value, setValue] = useState(METRIC_COUNT_START);
+
+  useEffect(() => {
+    if (!inView) return;
+
+    if (typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setValue(METRIC_COUNT_END);
+      return;
+    }
+
+    let cancelled = false;
+    const t0 = performance.now();
+
+    const tick = (now: number) => {
+      if (cancelled) return;
+      const p = Math.min(1, (now - t0) / METRIC_COUNT_MS);
+      const eased = easeOutCubic(p);
+      const next = Math.round(
+        METRIC_COUNT_START + (METRIC_COUNT_END - METRIC_COUNT_START) * eased
+      );
+      setValue(next);
+      if (p < 1) requestAnimationFrame(tick);
+    };
+
+    requestAnimationFrame(tick);
+    return () => {
+      cancelled = true;
+    };
+  }, [inView]);
+
+  return (
+    <div
+      ref={ref}
+      className="relative flex w-full flex-col items-center justify-center overflow-hidden px-6 py-10 text-center"
+      style={{ borderRadius: 4, aspectRatio: "600 / 325" }}
+    >
+      <img
+        src={backgroundImage}
+        alt=""
+        className="absolute inset-0 h-full w-full object-cover"
+      />
+      {/* Len spodný jemný scrim — zvyšok plochy ostáva ako svetlý source */}
+      <div
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-[48%] bg-gradient-to-t from-black/35 to-transparent"
+        aria-hidden
+      />
+      <div
+        className="relative z-10 flex flex-col items-center justify-center gap-3"
+        style={{ textShadow: "0 1px 18px rgba(0,0,0,0.35)" }}
+      >
+        <p
+          className="m-0"
+          style={{
+            fontWeight: 500,
+            fontSize: "clamp(40px, 4vw, 68px)",
+            color: "#ffffff",
+            letterSpacing: "-3px",
+            lineHeight: "normal",
+          }}
+        >
+          +{value}
+          &nbsp;M
+        </p>
+        <p
+          className="m-0 max-w-[430px]"
+          style={{
+            fontWeight: 500,
+            fontSize: 16,
+            color: "rgba(255, 255, 255, 0.9)",
+            letterSpacing: "-0.48px",
+            lineHeight: "24px",
+          }}
+        >
+          Active users in apps that we design
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function GridSpacer() {
+  return <div className="hidden min-h-px md:col-span-1 md:block" aria-hidden />;
+}
+
+/**
+ * Projekty — Figma 621:22379: pod logami, canvas ako logos, 12-col grid:
+ * riadok 1: 7 + 1 + 4 · riadok 2: 4 + 1 + 3 + 1 + 3 · riadok 3: 7 + 1 + 4 (metrika).
+ */
 export function ProjectsSection() {
+  const [p0, p1, p2, p3, p4, p5] = PROJECTS;
+
   return (
     <section
       id="work"
       data-scroll-section
-      className="relative w-full bg-[var(--work-canvas)] md:bg-white"
+      className="relative w-full bg-[var(--logos-canvas)] text-white"
     >
       <LayoutContainer
         className="flex flex-col"
         style={{
-          paddingTop: "clamp(48px, 6.5vw, 124px)",
-          paddingBottom: "clamp(48px, 6.5vw, 124px)",
+          paddingTop: "clamp(48px, 6.5vw, 96px)",
+          paddingBottom: "clamp(64px, 8vw, 140px)",
         }}
       >
-        {/* Section heading */}
-        <div className="flex items-center justify-between gap-4 mb-10 md:mb-16">
-          <RevealHeadline
-            lines={["This is how we do it"]}
-            wrapperClassName="min-w-0 flex-1"
+        <div className="mb-10 md:mb-14">
+          <p
+            className="m-0 max-w-[min(100%,42rem)]"
             style={{
               fontWeight: 500,
-              fontSize: "clamp(28px, 3.54vw, 68px)",
-              color: "#013439",
-              letterSpacing: "-0.044em",
+              fontSize: "clamp(12px, 0.95vw, 18px)",
+              color: "var(--logos-intro)",
+              letterSpacing: "0.12em",
               lineHeight: "normal",
-              margin: 0,
+              textTransform: "uppercase",
             }}
-          />
-
-          {/* See all */}
-          <button
-            className="flex items-center gap-2 shrink-0 hover:opacity-60 transition-opacity duration-200"
-            style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}
           >
-            <span
-              style={{
-                fontWeight: 400,
-                fontSize: "clamp(18px, 2.08vw, 40px)",
-                color: "rgba(1,52,57,0.5)",
-                letterSpacing: "-0.044em",
-                lineHeight: "normal",
-              }}
-            >
-              See all
-            </span>
-            <ArrowIcon color="rgba(1,52,57,0.5)" size={28} />
-          </button>
+            This is how we do it
+          </p>
         </div>
 
-        {/* Mobile: karty na sivom canvase; desktop: plochý zoznam, medzery len z ProjectRow py */}
-        <div className="flex w-full flex-col gap-3 md:gap-0">
-          {PROJECTS.map((project) => (
-            <ProjectRow key={project.name} {...project} />
-          ))}
-        </div>
+        <LayoutGrid className="gap-y-[clamp(96px,14vw,200px)]">
+          <ProjectsRow1Aligned left={p0} right={p1} />
+
+          {/* Row 2 — 4 · 1 · 3 · 1 · 3 */}
+          <div className="col-span-12 md:col-span-4">
+            <ProjectCard project={p2} size="medium" />
+          </div>
+          <GridSpacer />
+          <div className="col-span-12 md:col-span-3">
+            <ProjectCard project={p3} size="medium" />
+          </div>
+          <GridSpacer />
+          <div className="col-span-12 md:col-span-3">
+            <ProjectCard project={p4} size="medium" />
+          </div>
+
+          {/* Row 3 — 7 · 1 · 4 (Spotify + metrika) */}
+          <ProjectsRow3SpotifyMetric project={p5} metricBackgroundImage={imgBanner} />
+        </LayoutGrid>
       </LayoutContainer>
     </section>
   );

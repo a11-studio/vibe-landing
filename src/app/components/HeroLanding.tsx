@@ -8,9 +8,9 @@ import { HeroAsciiPattern } from "@/app/components/HeroAsciiPattern";
 import imgProfileImage1 from "@/imports/MainContainer/ecc192fa4213baaac273888921a1551274ec058a.png";
 import { LogosSection } from "@/app/components/LogosSection";
 import { ProcessSection } from "@/app/components/ProcessSection";
-import { Process2Section } from "@/app/components/Process2Section";
 import { ProjectsSection } from "@/app/components/ProjectsSection";
 import { AboutSection } from "@/app/components/AboutSection";
+import { CompetitorSection } from "@/app/components/CompetitorSection";
 import { FooterSection } from "@/app/components/FooterSection";
 import { LayoutContainer } from "@/app/components/layout";
 import { RevealHeadline } from "@/app/components/RevealHeadline";
@@ -500,7 +500,7 @@ export function HeroLanding() {
         onMenuOpenChange={setMenuOpen}
       />
 
-      <div className="relative w-full">
+      <div className="relative w-full bg-[var(--logos-canvas)]">
 
         {/* ── Hero ── */}
         <section
@@ -590,10 +590,11 @@ export function HeroLanding() {
         </section>
 
         <LogosSection />
-        <ProcessSection />
-        <Process2Section />
         <ProjectsSection />
+        <ProcessSection />
         <AboutSection />
+
+        <CompetitorSection />
 
         <FooterSection />
       </div>

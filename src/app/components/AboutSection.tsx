@@ -1,3 +1,4 @@
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import imgImage2Mobile2 from "@/imports/MainContainer-2/d3cc047f1a595cb3f0387d0955e6730e6c665758.png";
 import imgIconImage     from "@/imports/MainContainer-2/c6085f260fd9c0ba4788039a74aabfe2a7c5edce.png";
 import imgProfileImage  from "@/imports/MainContainer-2/99e69596bfd47f32feaf8f5fa9b959e58b0a5201.png";
@@ -6,6 +7,187 @@ import imgProfileImage2 from "@/imports/MainContainer-2/99cf73b51a4c59b3d9120e08
 import imgProfileImage3 from "@/imports/MainContainer-2/791ff24325ad83485e0f9e7f0ccd0f68b2c07f3d.png";
 import { LayoutContainer } from "@/app/components/layout";
 import { RevealHeadline } from "@/app/components/RevealHeadline";
+import { useInView } from "@/app/hooks/useInView";
+
+const STAT_COUNT_MS = 1500;
+/** Kreslenie vertikálnej čiary po vstupe bannera do viewportu + pauza. */
+const STAT_LINE_DRAW_MS = 950;
+/** Počítadlo — spustí sa skôr (menší priesečník, bez pauzy). */
+const STAT_COUNT_INVIEW_THRESHOLD = 0.22;
+/** Čiara — až keď je banner výraznejšie vo viewporte + STAT_LINE_START_DELAY_MS. */
+const STAT_BANNER_INVIEW_THRESHOLD = 0.58;
+/** Po tom, čo je banner „v strede záujmu“, ešte krátka pauza, aby bolo kreslenie čiary viditeľné. */
+const STAT_LINE_START_DELAY_MS = 650;
+
+function easeOutCubic(t: number): number {
+  return 1 - (1 - t) ** 3;
+}
+
+type TeamStatFormat = "millions" | "plus" | "days";
+
+/** Vertikálna čiara — po `reveal` sa „nakreslí“ zhora nadol (výška 0 % → 100 %). */
+function TeamStatAccentLine({
+  reveal,
+  reducedMotion,
+}: {
+  reveal: boolean;
+  reducedMotion: boolean;
+}) {
+  return (
+    <div
+      className="pointer-events-none relative w-px shrink-0 self-stretch overflow-hidden"
+      style={{ minHeight: 1 }}
+      aria-hidden
+    >
+      <div
+        className="absolute left-0 top-0 w-full bg-[rgba(1,52,57,0.2)]"
+        style={{
+          height: reveal ? "100%" : "0%",
+          transition: reducedMotion
+            ? "none"
+            : `height ${STAT_LINE_DRAW_MS}ms cubic-bezier(0.22, 1, 0.36, 1)`,
+        }}
+      />
+    </div>
+  );
+}
+
+function TeamStatCell({
+  start,
+  end,
+  label,
+  format,
+  accentLine,
+  durationMs = STAT_COUNT_MS,
+}: {
+  start: number;
+  end: number;
+  label: string;
+  format: TeamStatFormat;
+  /** Figma: 1. riadok čiara zľava, 2. z prava, 3. zľava. */
+  accentLine?: "left" | "right";
+  durationMs?: number;
+}) {
+  const cellRef = useRef<HTMLDivElement>(null);
+  const { inView: countInView } = useInView({
+    threshold: STAT_COUNT_INVIEW_THRESHOLD,
+    once: true,
+    elementRef: cellRef,
+  });
+  const { inView: lineInView } = useInView({
+    threshold: STAT_BANNER_INVIEW_THRESHOLD,
+    once: true,
+    elementRef: cellRef,
+  });
+  const [value, setValue] = useState(start);
+  const [lineReveal, setLineReveal] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(
+    () =>
+      typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
+
+  useLayoutEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setReducedMotion(mq.matches);
+    const onChange = () => setReducedMotion(mq.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+
+  useEffect(() => {
+    if (!lineInView) return;
+
+    if (reducedMotion) {
+      setLineReveal(true);
+      return;
+    }
+
+    const id = window.setTimeout(() => setLineReveal(true), STAT_LINE_START_DELAY_MS);
+    return () => clearTimeout(id);
+  }, [lineInView, reducedMotion]);
+
+  useEffect(() => {
+    if (!countInView) return;
+
+    if (reducedMotion) {
+      setValue(end);
+      return;
+    }
+
+    let cancelled = false;
+    const t0 = performance.now();
+
+    const tick = (now: number) => {
+      if (cancelled) return;
+      const p = Math.min(1, (now - t0) / durationMs);
+      const eased = easeOutCubic(p);
+      const next = Math.round(start + (end - start) * eased);
+      setValue(next);
+      if (p < 1) requestAnimationFrame(tick);
+    };
+
+    requestAnimationFrame(tick);
+    return () => {
+      cancelled = true;
+    };
+  }, [countInView, reducedMotion, start, end, durationMs]);
+
+  const headline =
+    format === "millions" ? (
+      <>
+        +{value}
+        &nbsp;M
+      </>
+    ) : format === "plus" ? (
+      <>+{value}</>
+    ) : (
+      <>
+        {value} days
+      </>
+    );
+
+  return (
+    <div
+      ref={cellRef}
+      className="flex h-full min-h-0 w-full items-stretch"
+      style={{ gap: "clamp(16px, 2.5vw, 40px)" }}
+    >
+      {accentLine === "left" ? (
+        <TeamStatAccentLine reveal={lineReveal} reducedMotion={reducedMotion} />
+      ) : null}
+      <div className="flex h-full min-w-0 flex-1 flex-col items-center justify-center px-2 py-8 text-center md:px-4 md:py-10">
+        <p
+          className="m-0"
+          style={{
+            fontWeight: 500,
+            fontSize: "clamp(40px, 4vw, 68px)",
+            color: "#013439",
+            letterSpacing: "-3px",
+            lineHeight: "normal",
+          }}
+        >
+          {headline}
+        </p>
+        <p
+          className="m-0 mt-2 max-w-[430px]"
+          style={{
+            fontWeight: 500,
+            fontSize: 16,
+            color: "rgba(39, 20, 13, 0.5)",
+            letterSpacing: "-0.48px",
+            lineHeight: "24px",
+          }}
+        >
+          {label}
+        </p>
+      </div>
+      {accentLine === "right" ? (
+        <TeamStatAccentLine reveal={lineReveal} reducedMotion={reducedMotion} />
+      ) : null}
+    </div>
+  );
+}
+
 // ─── Individual photo cards ───────────────────────────────────────────────────
 // Each card reproduces the Figma ImageContainer at fixed 446×490 output size.
 // We wrap in an aspect-ratio div so it scales responsively.
@@ -110,7 +292,7 @@ export function AboutSection() {
       id="team"
       data-scroll-section
       className="relative w-full"
-      style={{ backgroundColor: "rgba(228,222,219,0.6)" }}
+      style={{ backgroundColor: "#EFEBE9" }}
     >
       <LayoutContainer
         style={{
@@ -118,8 +300,25 @@ export function AboutSection() {
           paddingBottom: "clamp(80px, 8.5vw, 163px)",
         }}
       >
+        <div className="mb-10 md:mb-14">
+          <p
+            className="m-0 max-w-[min(100%,42rem)]"
+            style={{
+              fontWeight: 500,
+              fontSize: "clamp(12px, 0.95vw, 18px)",
+              color: "var(--logos-intro)",
+              letterSpacing: "0.12em",
+              lineHeight: "normal",
+              textTransform: "uppercase",
+            }}
+          >
+            Meet our team
+          </p>
+        </div>
+
         <RevealHeadline
-          lines={["Team is assembled from this bench —", "senior people from companies that ship."]}
+          wrapperClassName="team-section-headline"
+          lines={["Team is assembled from this bench", "senior people from companies that ship."]}
           style={{
             fontWeight: 500,
             fontSize: "clamp(28px, 2.5vw, 48px)",
@@ -132,10 +331,10 @@ export function AboutSection() {
         />
 
         {/*
-         * Desktop grid — mirrors Figma staggered layout:
-         *   Row 1:  [·]       [Martin]   [Gabriel]
-         *   Row 2:  [Michal]  [Michaela] [·]
-         *   Row 3:  [·]       [Patrik]   [·]
+         * Desktop grid — Figma 621:25430:
+         *   Row 1:  [+25 M]   [Martin]   [Gabriel]
+         *   Row 2:  [Michal]  [Michaela] [+50]
+         *   Row 3:  [14 days] [Patrik]   [empty]
          */}
         <div
           className="hidden md:grid"
@@ -146,47 +345,105 @@ export function AboutSection() {
             rowGap: "clamp(32px, 5vw, 80px)",
           }}
         >
-          {/* Row 1 */}
-          <div style={{ gridColumn: 2, gridRow: 1 }}>
+          <div className="h-full min-h-0" style={{ gridColumn: 1, gridRow: 1 }}>
+            <TeamStatCell
+              format="millions"
+              start={10}
+              end={25}
+              label="Active users in apps that we design"
+              accentLine="left"
+            />
+          </div>
+          <div className="h-full min-h-0" style={{ gridColumn: 2, gridRow: 1 }}>
             <CardMartin />
             <Label name="Martin Mroc" role="CEO & UX/UI Designer" />
           </div>
-          <div style={{ gridColumn: 3, gridRow: 1 }}>
+          <div className="h-full min-h-0" style={{ gridColumn: 3, gridRow: 1 }}>
             <CardGabriel />
             <Label name="Gabriel Hudoba" role="Consultant & UX/UI Designer" />
           </div>
 
-          {/* Row 2 */}
-          <div style={{ gridColumn: 1, gridRow: 2 }}>
+          <div className="h-full min-h-0" style={{ gridColumn: 1, gridRow: 2 }}>
             <CardMichal />
             <Label name="Michal Prekop" role="3D Artist" />
           </div>
-          <div style={{ gridColumn: 2, gridRow: 2 }}>
+          <div className="h-full min-h-0" style={{ gridColumn: 2, gridRow: 2 }}>
             <CardMichaela />
             <Label name="Michaela Fias" role="Brand Designer" />
           </div>
+          <div className="h-full min-h-0" style={{ gridColumn: 3, gridRow: 2 }}>
+            <TeamStatCell
+              format="plus"
+              start={10}
+              end={50}
+              label="Successful projects shipped"
+              accentLine="right"
+            />
+          </div>
 
-          {/* Row 3 */}
-          <div style={{ gridColumn: 2, gridRow: 3 }}>
+          <div className="h-full min-h-0" style={{ gridColumn: 1, gridRow: 3 }}>
+            <TeamStatCell
+              format="days"
+              start={30}
+              end={14}
+              label="From idea to testable experience"
+              accentLine="left"
+            />
+          </div>
+          <div className="h-full min-h-0" style={{ gridColumn: 2, gridRow: 3 }}>
             <CardPatrik />
             <Label name="Patrik Smejkal" role="Product Manager" />
           </div>
+          <div className="h-full min-h-0" style={{ gridColumn: 3, gridRow: 3 }} aria-hidden />
         </div>
 
-        {/* Mobile — two people per row */}
-        <div className="grid md:hidden grid-cols-2 gap-x-[clamp(8px,2.5vw,20px)] gap-y-10">
-          {[
-            { Card: CardMartin,   name: "Martin Mroc",     role: "CEO & UX/UI Designer" },
-            { Card: CardGabriel,  name: "Gabriel Hudoba",  role: "Consultant & UX/UI Designer" },
-            { Card: CardMichal,   name: "Michal Prekop",   role: "3D Artist" },
-            { Card: CardMichaela, name: "Michaela Fias",   role: "Brand Designer" },
-            { Card: CardPatrik,   name: "Patrik Smejkal",  role: "Product Manager" },
-          ].map(({ Card, name, role }) => (
-            <div key={name} className="min-w-0">
-              <Card />
-              <Label name={name} role={role} compact />
+        {/* Mobile — stats full width, then 2-col people grid (reading order ≈ Figma) */}
+        <div className="flex flex-col gap-10 md:hidden">
+          <TeamStatCell
+            format="millions"
+            start={10}
+            end={25}
+            label="Active users in apps that we design"
+            accentLine="left"
+          />
+          <div className="grid grid-cols-2 gap-x-[clamp(8px,2.5vw,20px)] gap-y-10">
+            <div className="min-w-0">
+              <CardMartin />
+              <Label name="Martin Mroc" role="CEO & UX/UI Designer" compact />
             </div>
-          ))}
+            <div className="min-w-0">
+              <CardGabriel />
+              <Label name="Gabriel Hudoba" role="Consultant & UX/UI Designer" compact />
+            </div>
+            <div className="min-w-0">
+              <CardMichal />
+              <Label name="Michal Prekop" role="3D Artist" compact />
+            </div>
+            <div className="min-w-0">
+              <CardMichaela />
+              <Label name="Michaela Fias" role="Brand Designer" compact />
+            </div>
+          </div>
+          <TeamStatCell
+            format="plus"
+            start={10}
+            end={50}
+            label="Successful projects shipped"
+            accentLine="right"
+          />
+          <TeamStatCell
+            format="days"
+            start={30}
+            end={14}
+            label="From idea to testable experience"
+            accentLine="left"
+          />
+          <div className="grid max-w-[min(100%,320px)] grid-cols-1 gap-y-10">
+            <div className="min-w-0">
+              <CardPatrik />
+              <Label name="Patrik Smejkal" role="Product Manager" compact />
+            </div>
+          </div>
         </div>
       </LayoutContainer>
     </section>

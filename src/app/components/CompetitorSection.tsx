@@ -1,0 +1,331 @@
+import type { CSSProperties, ReactNode } from "react";
+import { Fragment, useLayoutEffect, useRef, useState } from "react";
+import imgHeroTexture from "@/imports/image.png";
+import svgPaths from "@/imports/Footer/svg-39tshfia8v";
+import { LayoutContainer } from "@/app/components/layout";
+import { RevealHeadline } from "@/app/components/RevealHeadline";
+import { useInView } from "@/app/hooks/useInView";
+
+/** Pozadie sekcie — Figma 622:25440 */
+const SECTION_BG = "#27140d";
+
+const H_RULE_INTRO_DELAY_MS = 240;
+const H_RULE_STAGGER_MS = 85;
+const H_RULE_DRAW_MS = 700;
+
+/** 12-col: 2 prázdne | 2 labels | 3 vibe | 3 agency | 2 prázdne — ľavý okraj stĺpca Vibe (1-based col 5 → 4 „fr“ zo začiatku). */
+const VIBE_COL_START_FR = 4;
+const VIBE_COL_SPAN_FR = 3;
+
+function VibeLogoWhite() {
+  return (
+    <svg width="51" height="24" viewBox="0 0 50.3951 24" fill="none" aria-hidden>
+      <path d={svgPaths.p2641c400} fill="white" />
+      <path d={svgPaths.p11b87d00} fill="white" />
+      <path d={svgPaths.p2bd5b200} fill="white" />
+      <path d={svgPaths.pdd8c00} fill="white" />
+    </svg>
+  );
+}
+
+/** Rám okolo stĺpca Vibe — ten istý obrázok ako hero; jemná rotácia textúry (theme.css). */
+function VibeColumnFrame({ children }: { children: ReactNode }) {
+  return (
+    <div className="competitor-vibe-frame h-full min-h-full">
+      <div
+        className="competitor-vibe-frame__orbit"
+        style={{ backgroundImage: `url(${imgHeroTexture})` }}
+        aria-hidden
+      />
+      <div
+        className="relative z-[1] m-[2px] flex min-h-0 flex-1 flex-col rounded-[12px]"
+        style={{ backgroundColor: SECTION_BG }}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function CheckMark() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={12}
+      height={9}
+      viewBox="0 0 12 9"
+      fill="none"
+      className="inline-block shrink-0"
+      aria-hidden
+    >
+      <path
+        d="M0 4.35795L1.10795 3.22727L3.98295 6.0625L10.0682 0L11.1932 1.13068L3.98295 8.3125L0 4.35795Z"
+        fill="#9BBA36"
+      />
+    </svg>
+  );
+}
+
+/**
+ * Jedna souvislá horizontálna čiara — po `reveal` sa „nakreslí“ zľava doprava.
+ * `.competitor-h-rule__bar` — neskôr možno rozšíriť o motion/react.
+ */
+function CompetitorHRule({
+  lineIndex,
+  reveal,
+  reducedMotion,
+}: {
+  lineIndex: number;
+  reveal: boolean;
+  reducedMotion: boolean;
+}) {
+  const delayMs = reducedMotion ? 0 : H_RULE_INTRO_DELAY_MS + lineIndex * H_RULE_STAGGER_MS;
+  const durationMs = reducedMotion ? 0 : H_RULE_DRAW_MS;
+
+  return (
+    <div
+      className="competitor-h-rule relative z-[15] h-px w-full overflow-hidden"
+      aria-hidden
+    >
+      <div
+        className="competitor-h-rule__bar h-full w-full origin-left bg-white/10"
+        style={{
+          transform: reveal ? "scaleX(1)" : "scaleX(0)",
+          transitionProperty: "transform",
+          transitionDuration: `${durationMs}ms`,
+          transitionTimingFunction: "cubic-bezier(0.22, 1, 0.36, 1)",
+          transitionDelay: `${delayMs}ms`,
+        }}
+      />
+    </div>
+  );
+}
+
+export type CompetitorRow = {
+  label: string;
+  vibe: string;
+  agency: string;
+};
+
+const COMPETITOR_ROWS: CompetitorRow[] = [
+  {
+    label: "Seniority",
+    vibe: "Senior only",
+    agency: "Mixed with juniors",
+  },
+  {
+    label: "Flexibility",
+    vibe: "Per project",
+    agency: "Fixed package",
+  },
+  {
+    label: "Speed to output",
+    vibe: "Weeks (coded)",
+    agency: "Months (decks)",
+  },
+  {
+    label: "Cost structure",
+    vibe: "Pay for need",
+    agency: "Overhead + bloat",
+  },
+];
+
+const cellLabel: CSSProperties = {
+  fontWeight: 400,
+  fontSize: 15,
+  color: "rgba(255, 255, 255, 0.5)",
+  letterSpacing: "-0.45px",
+  lineHeight: "normal",
+};
+
+const cellValue: CSSProperties = {
+  fontWeight: 500,
+  fontSize: 15,
+  color: "#ffffff",
+  letterSpacing: "-0.45px",
+  lineHeight: "normal",
+};
+
+/**
+ * Figma 622:25478 — porovnanie: jeden stĺpec Vibe (rám), souvislé horizontálne čiary,
+ * po vstupe do viewportu kreslenie zľava doprava so staggerom.
+ */
+export function CompetitorSection() {
+  const tableShellRef = useRef<HTMLDivElement>(null);
+  const { inView } = useInView({
+    threshold: 0.32,
+    once: true,
+    elementRef: tableShellRef,
+  });
+  const [reducedMotion, setReducedMotion] = useState(
+    () =>
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
+
+  useLayoutEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setReducedMotion(mq.matches);
+    const onChange = () => setReducedMotion(mq.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+
+  const lineReveal = reducedMotion || inView;
+
+  return (
+    <section
+      id="competitor"
+      data-scroll-section
+      className="relative w-full text-white"
+      style={{ backgroundColor: SECTION_BG }}
+    >
+      <LayoutContainer
+        style={{
+          paddingTop: "clamp(72px, 9vw, 140px)",
+          paddingBottom: "clamp(72px, 9vw, 140px)",
+        }}
+      >
+        <header className="mx-auto max-w-[920px] text-center">
+          <p
+            className="m-0 uppercase"
+            style={{
+              fontWeight: 500,
+              fontSize: "clamp(12px, 0.95vw, 18px)",
+              color: "var(--logos-intro)",
+              letterSpacing: "0.12em",
+              lineHeight: "normal",
+              marginBottom: "clamp(10px, 1.2vw, 18px)",
+            }}
+          >
+            Competitor advantage
+          </p>
+          <RevealHeadline
+            lines={["So why companies choose us?"]}
+            className="m-0 text-center text-white"
+            style={{
+              fontWeight: 500,
+              fontSize: "clamp(28px, 3.2vw, 48px)",
+              letterSpacing: "-3px",
+              lineHeight: "normal",
+              color: "#ffffff",
+              margin: 0,
+            }}
+          />
+        </header>
+
+        <div className="mx-auto mt-[clamp(40px,6vw,72px)] max-w-[1220px] overflow-x-auto">
+          <div ref={tableShellRef} className="relative min-w-[min(100%,640px)]">
+            {/* Rám Vibe: stĺpce 5–7 (3/12 šírky), vertikálne cez hlavičku + dátové riadky; čiary z-[15] sú navrchu. */}
+            <div
+              className="pointer-events-none absolute top-0 z-[1]"
+              style={{
+                left: `calc(100% * ${VIBE_COL_START_FR} / 12)`,
+                width: `calc(100% * ${VIBE_COL_SPAN_FR} / 12)`,
+                bottom: 0,
+              }}
+            >
+              <div className="pointer-events-auto h-full">
+                <VibeColumnFrame>
+                  <div className="flex h-full min-h-full flex-col">
+                    <div className="flex shrink-0 justify-center px-4 pb-6 pt-7 md:px-5 md:pb-7 md:pt-8">
+                      <span className="inline-flex" aria-label="Vibe">
+                        <VibeLogoWhite />
+                      </span>
+                    </div>
+                    {COMPETITOR_ROWS.map((row) => (
+                      <div
+                        key={row.label}
+                        className="flex min-h-0 flex-1 flex-col items-center justify-center gap-2 px-3 py-5 md:flex-row md:gap-2.5 md:px-4 md:py-6"
+                      >
+                        <span style={cellValue}>{row.vibe}</span>
+                        <CheckMark />
+                      </div>
+                    ))}
+                  </div>
+                </VibeColumnFrame>
+              </div>
+            </div>
+
+            <div className="relative z-[2] flex flex-col">
+              <div className="grid grid-cols-12">
+                <div className="col-span-2 min-w-0" aria-hidden />
+                <div className="col-span-2 min-w-0" aria-hidden />
+                <div
+                  className="col-span-3 min-w-0"
+                  style={{ minHeight: "clamp(72px, 10vw, 88px)" }}
+                  aria-hidden
+                />
+                <div
+                  className="col-span-3 flex min-w-0 items-end justify-center pb-6 text-center font-medium"
+                  style={{
+                    fontSize: 24,
+                    color: "#ffffff",
+                    letterSpacing: "-0.72px",
+                    lineHeight: "normal",
+                  }}
+                >
+                  Agency
+                </div>
+                <div className="col-span-2 min-w-0" aria-hidden />
+              </div>
+
+              <div className="grid grid-cols-12">
+                <div className="col-span-2" aria-hidden />
+                <div className="col-span-8">
+                  <CompetitorHRule
+                    lineIndex={0}
+                    reveal={lineReveal}
+                    reducedMotion={reducedMotion}
+                  />
+                </div>
+                <div className="col-span-2" aria-hidden />
+              </div>
+
+              {COMPETITOR_ROWS.map((row, rowIndex) => (
+                <Fragment key={row.label}>
+                  <div
+                    className="competitor-table__row grid grid-cols-12 items-stretch"
+                    data-competitor-row-index={rowIndex}
+                  >
+                    <div className="col-span-2 min-w-0" aria-hidden />
+                    <div
+                      className="col-span-2 flex min-w-0 items-center py-5 md:py-6"
+                      style={cellLabel}
+                    >
+                      {row.label}
+                    </div>
+                    <div
+                      className="col-span-3 min-w-0 py-5 md:py-6"
+                      aria-hidden
+                    />
+                    <div
+                      className="col-span-3 flex min-w-0 items-center justify-center py-5 text-center md:py-6"
+                      style={cellValue}
+                    >
+                      {row.agency}
+                    </div>
+                    <div className="col-span-2 min-w-0" aria-hidden />
+                  </div>
+                  {rowIndex < COMPETITOR_ROWS.length - 1 ? (
+                    <div className="grid grid-cols-12">
+                      <div className="col-span-2" aria-hidden />
+                      <div className="col-span-8">
+                        <CompetitorHRule
+                          lineIndex={rowIndex + 1}
+                          reveal={lineReveal}
+                          reducedMotion={reducedMotion}
+                        />
+                      </div>
+                      <div className="col-span-2" aria-hidden />
+                    </div>
+                  ) : null}
+                </Fragment>
+              ))}
+            </div>
+          </div>
+        </div>
+      </LayoutContainer>
+    </section>
+  );
+}

@@ -13,6 +13,12 @@
   /* Svetlý canvas sekcie Work — biele karty projektov hore */
   --work-canvas: #f0efed;
 
+  /* Logos / hero pás / footer / body — pôvodný tmavý canvas */
+  --logos-canvas: #1c1310;
+  /* Our process (621:19494) — výraznejší odtieň */
+  --process-canvas: #27140d;
+  --logos-intro: #56544f;
+
   --font-size: 16px;
   --background: #ffffff;
   --foreground: oklch(0.145 0 0);
@@ -51,6 +57,10 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+}
+
+body {
+  background-color: var(--logos-canvas);
 }
 
 html {
@@ -255,6 +265,62 @@ html {
   .reveal-headline__line {
     transform: none;
     animation: none !important;
+  }
+}
+
+/* Team sekcia: negatívny tracking + overflow na maskách orezáva konce slov (s, e, bodky …). */
+.team-section-headline {
+  padding-inline: clamp(2px, 0.25vw, 6px);
+  box-sizing: content-box;
+}
+
+.team-section-headline .reveal-headline__mask--inline {
+  padding-right: max(0.05em, 2px);
+  padding-left: 0.015em;
+}
+
+/* Koniec riadku — menej než predtým, stále trochu proti orezaniu posledného znaku. */
+.team-section-headline .reveal-line-group {
+  padding-right: clamp(3px, 0.45vw, 8px);
+}
+
+/* Competitor — Vibe rám: jemná rotácia textúry v „okraji“ (dojem pohybu gradientu). */
+@keyframes competitor-vibe-border-rotate {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+.competitor-vibe-frame {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 14px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+.competitor-vibe-frame__orbit {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 0;
+  width: 220%;
+  height: 220%;
+  background-position: center;
+  background-size: cover;
+  pointer-events: none;
+  animation: competitor-vibe-border-rotate 45s linear infinite;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .competitor-vibe-frame__orbit {
+    animation: none;
+    transform: translate(-50%, -50%);
   }
 }
 
