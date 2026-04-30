@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { mountHeroAsciiLayer } from "@/app/components/heroAsciiLayer";
-import imgWidget3 from "@/imports/widget3.png";
+import imgWidget4 from "@/imports/widget4.png";
 import { cn } from "@/app/components/ui/utils";
 
 type HeroAsciiPatternProps = {
@@ -8,7 +8,7 @@ type HeroAsciiPatternProps = {
 };
 
 /**
- * ASCII wave — `widget3.png` má rovnaké rozmery ako hero `image.png`; canvas je inset-0 ako hero `<img>`
+ * ASCII wave — vzorkuje `widget4.png` (rovnaký pomer ako hero `image.png`); canvas je inset-0 ako `<img>`
  * a vzorka používa object-cover, takže efekt drží krok s responzívnym pozadím 1:1.
  */
 export function HeroAsciiPattern({ className }: HeroAsciiPatternProps) {
@@ -22,7 +22,7 @@ export function HeroAsciiPattern({ className }: HeroAsciiPatternProps) {
     return mountHeroAsciiLayer({
       container,
       canvas,
-      imageSrc: imgWidget3,
+      imageSrc: imgWidget4,
     });
   }, []);
 

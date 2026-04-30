@@ -5,15 +5,30 @@
 
 const FONT_FAMILY = 'Inter, ui-sans-serif, system-ui, sans-serif';
 
+/**
+ * Vlnové vzorkovanie — rovnaký strop posunu (`WAVE_OFF_MAX_FACTOR`); vyššie frekvencie, rýchlosť
+ * a tretia harmonická pridávajú výraznejšiu vlnitosti / život v rámci kruhu.
+ */
 const WAVE = {
-  speed1: 0.55,
-  speed2: 0.38,
-  kx1: 0.011,
-  ky1: 0.014,
-  kx2: 0.017,
-  ky2: 0.011,
-  blend: 0.42,
+  speed1: 0.68,
+  speed2: 0.52,
+  /** Pomalšia tretia vrstva — iný rytmus bez rozšírenia dosahu (orezáva sa na offCap). */
+  speed3: 0.33,
+  kx1: 0.018,
+  ky1: 0.02,
+  kx2: 0.023,
+  ky2: 0.017,
+  kx3: 0.031,
+  ky3: 0.027,
+  blend: 0.46,
+  /** Príspevok tretej vlny voči `amp` pred orezaním. */
+  tertiary: 0.2,
 } as const;
+
+/** Základ amplitúdy; výsledok vždy oreže `offCapPx`. */
+const WAVE_AMP_FRAC = 0.024;
+/** Max. posun vzorky od stredu bunky = `gridSize * tento faktor` (drží „izoláciu“ pri znakoch). */
+const WAVE_OFF_MAX_FACTOR = 0.48;
 
 /** Hodnoty z widget3 (#ah-param-store + checkboxy) */
 const PARAMS = {
@@ -220,25 +235,39 @@ export function mountHeroAsciiLayer(options: {
     ctx.imageSmoothingQuality = "high";
   }
 
-  function waveSampleXY(cx: number, cy: number, w: number, h: number) {
+  function waveSampleXY(cx: number, cy: number, w: number, h: number, offCapPx: number) {
     const t = state.waveTimeMs * 0.001;
-    const amp = Math.min(w, h) * 0.034;
+    let amp = Math.min(w, h) * WAVE_AMP_FRAC;
+    amp = Math.min(amp, offCapPx);
     const wv = WAVE;
+    const cross = cy * 0.007 + cx * 0.0045;
     const p1 = wv.speed1 * t + cx * wv.kx1 + cy * wv.ky1;
     const p2 = wv.speed2 * t - cx * wv.kx2 + cy * wv.ky2;
     const q1 = wv.speed2 * 0.9 * t + cx * wv.ky1 * 0.85 - cy * wv.kx1;
     const q2 = wv.speed1 * 1.1 * t + cx * wv.kx2 * 0.7 + cy * wv.ky2 * 1.05;
+    const p3 = wv.speed3 * t + cx * wv.kx3 + cy * wv.ky3;
+    const ter = wv.tertiary;
+    let sx =
+      cx +
+      amp * Math.sin(p1) +
+      amp * wv.blend * Math.sin(p2 + cross) +
+      amp * ter * Math.sin(p3 + cross * 0.5);
+    let sy =
+      cy +
+      amp * Math.cos(q1) +
+      amp * wv.blend * Math.cos(q2 - cross) +
+      amp * ter * Math.cos(p3 * 0.91 - cross);
+    const dx = sx - cx;
+    const dy = sy - cy;
+    const len = Math.hypot(dx, dy);
+    if (len > offCapPx && len > 1e-6) {
+      const s = offCapPx / len;
+      sx = cx + dx * s;
+      sy = cy + dy * s;
+    }
     return {
-      sx: clamp(
-        cx + amp * Math.sin(p1) + amp * wv.blend * Math.sin(p2 + cy * 0.008),
-        0,
-        w - 1,
-      ),
-      sy: clamp(
-        cy + amp * Math.cos(q1) + amp * wv.blend * Math.cos(q2 - cx * 0.007),
-        0,
-        h - 1,
-      ),
+      sx: clamp(sx, 0, w - 1),
+      sy: clamp(sy, 0, h - 1),
     };
   }
 
@@ -262,6 +291,7 @@ export function mountHeroAsciiLayer(options: {
     const data = id.data;
 
     const cell = PARAMS.gridSize;
+    const offCapPx = cell * WAVE_OFF_MAX_FACTOR;
     const density = PARAMS.density;
     const bInf = PARAMS.brightnessInfluence;
     const eInf = PARAMS.edgeInfluence;
@@ -275,7 +305,7 @@ export function mountHeroAsciiLayer(options: {
         const cy = gy * cell + cell * 0.5;
         if (cx >= w || cy >= h) continue;
 
-        const wpt = waveSampleXY(cx, cy, w, h);
+        const wpt = waveSampleXY(cx, cy, w, h, offCapPx);
         const sx = wpt.sx;
         const sy = wpt.sy;
 

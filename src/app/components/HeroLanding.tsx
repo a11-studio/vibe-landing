@@ -530,7 +530,7 @@ export function HeroLanding() {
             aria-hidden
           />
 
-          {/* ASCII vzorka nad pozadím (widget3 wave; prefers-reduced-motion → statický frame) */}
+          {/* ASCII vzorka nad pozadím (widget4 / object-cover wave; prefers-reduced-motion → statický frame) */}
           <HeroAsciiPattern />
 
           <LayoutContainer className="relative z-10 flex justify-center">
@@ -539,7 +539,7 @@ export function HeroLanding() {
             className="flex flex-col items-center text-center"
           >
             {/* Vrstva pod hlavný nadpis — blur.png na plnú šírku, negat. inset = väčšia plocha za okrajom textu */}
-            <div className="relative isolate mb-4 w-full sm:mb-5">
+            <div className="relative isolate mb-2 w-full sm:mb-3">
               <img
                 src={imgHeadlineBlur}
                 alt=""
@@ -547,7 +547,7 @@ export function HeroLanding() {
                 loading="eager"
                 aria-hidden
               />
-              <div className="relative z-10 px-6 pt-5 pb-4 sm:px-9 sm:pt-6 sm:pb-4 md:px-12 md:pt-7 md:pb-5 lg:px-14 lg:pt-8 lg:pb-5">
+              <div className="relative z-10 px-6 pt-5 pb-2 sm:px-9 sm:pt-6 sm:pb-2 md:px-12 md:pt-7 md:pb-2 lg:px-14 lg:pt-8 lg:pb-2.5">
                 <RevealHeadline
                   as="h1"
                   inView={heroInView}
@@ -556,7 +556,7 @@ export function HeroLanding() {
                   style={{
                     fontWeight: 500,
                     fontSize: "clamp(40px, 5.5vw, 72px)",
-                    lineHeight: 1.17,
+                    lineHeight: 1.05,
                     letterSpacing: "-2px",
                   }}
                 />
@@ -567,11 +567,11 @@ export function HeroLanding() {
               inView={heroInView}
               lines={["We turn product ideas into device-ready, coded prototypes"]}
               staggerBaseDelayS={0.6}
-              className="m-0 max-w-[min(100%,42rem)] text-center text-white/90"
+              className="m-0 max-w-[min(100%,42rem)] text-center text-white/90 mt-1 sm:mt-1.5"
               style={{
                 fontWeight: 400,
                 fontSize: "clamp(15px, 1.8vw, 24px)",
-                lineHeight: 1.5,
+                lineHeight: 1.38,
               }}
             />
           </div>
@@ -582,7 +582,7 @@ export function HeroLanding() {
             className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-1.5 transition-opacity duration-300"
             style={{ opacity: scrollY > 60 ? 0 : 1 }}
           >
-            <span className="text-white/50 text-xs tracking-widest uppercase">
+            <span className="hero-scroll-hint text-xs tracking-widest uppercase">
               Scroll
             </span>
             <div className="w-px h-8 bg-white/30 animate-pulse" />
