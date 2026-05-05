@@ -17,7 +17,7 @@ export function FooterFlowerFvclip({
   useEffect(() => {
     const root = rootRef.current;
     if (!root) return;
-    const api = initFvclip(root, { videoSrc: flowerMp4, loop: true });
+    const api = initFvclip(root, { videoSrc: flowerMp4, loop: true, pingPong: true });
     return () => api?.destroy();
   }, []);
 

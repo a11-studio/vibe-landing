@@ -15,6 +15,11 @@ export type InitFvclipOptions = {
   videoSrc?: string;
   /** Default true for ambient footer */
   loop?: boolean;
+  /**
+   * When true: play forward, then scrub `currentTime` backward at ~1× speed, then forward again — endless „ping‑pong“.
+   * Disables native `video.loop` (reverse playback via negative `playbackRate` is not reliable cross‑browser).
+   */
+  pingPong?: boolean;
 };
 
 function qs(root: HTMLElement, name: string): HTMLInputElement | null {
@@ -28,6 +33,7 @@ export function initFvclip(
   if (!root) return null;
 
   const loopVideo = options.loop !== false;
+  const pingPongLoop = options.pingPong === true;
   const defaultVideoSrc =
     options.videoSrc ||
     root.getAttribute("data-fvclip-src") ||
@@ -63,6 +69,11 @@ export function initFvclip(
   let layoutDebounceTimer: ReturnType<typeof setTimeout> | null = null;
   let videoPreviewRaf: number | null = null;
   let destroyed = false;
+  /** Ping‑pong: manual backward scrub in RAF after `ended`. */
+  let playbackReverse = false;
+  let reverseLastTs = 0;
+  /** Chvíľa po `play()` od začiatku zlep — readyState môže klesnúť; držíme RAF + fallback snímok. */
+  let pendingForwardWarmup = false;
 
   function readFonts(): string {
     const cs = getComputedStyle(root);
@@ -95,6 +106,8 @@ export function initFvclip(
 
   const sampleCanvas = document.createElement("canvas");
   const sampleCtx = sampleCanvas.getContext("2d", { willReadFrequently: true });
+  const lastFrameCanvas = document.createElement("canvas");
+  const lastFrameCtx = lastFrameCanvas.getContext("2d");
   const ctxBase = els.canvasBase.getContext("2d", { alpha: false });
   const ctxOverlay = els.canvasOverlay.getContext("2d", { alpha: true });
 
@@ -132,13 +145,49 @@ export function initFvclip(
     }
   }
 
-  function videoPreviewTick(): void {
+  function videoPreviewTick(time: number): void {
     if (destroyed) return;
-    if (!state.media || state.media.readyState < 2) {
+    const v = state.media;
+    if (!v) {
       stopVideoPreviewLoop();
       return;
     }
+    const nearEnd =
+      pingPongLoop &&
+      !playbackReverse &&
+      Number.isFinite(v.duration) &&
+      v.duration > 0 &&
+      v.currentTime >= v.duration - 0.08;
+    const allowLowReady =
+      pingPongLoop && (playbackReverse || v.ended || pendingForwardWarmup || nearEnd);
+    if (v.readyState < 2 && !allowLowReady) {
+      stopVideoPreviewLoop();
+      return;
+    }
+    if (pingPongLoop && playbackReverse) {
+      if (reverseLastTs <= 0) {
+        reverseLastTs = time;
+      } else {
+        const dt = (time - reverseLastTs) / 1000;
+        reverseLastTs = time;
+        const next = v.currentTime - dt;
+        if (next <= 0.001) {
+          v.currentTime = 0;
+          playbackReverse = false;
+          reverseLastTs = 0;
+          pendingForwardWarmup = true;
+          renderCanvas();
+          void v.play();
+          startVideoPreviewLoop();
+          return;
+        }
+        v.currentTime = next;
+      }
+    }
     renderCanvas();
+    if (pingPongLoop && pendingForwardWarmup && v.readyState >= 2) {
+      pendingForwardWarmup = false;
+    }
     videoPreviewRaf = requestAnimationFrame(videoPreviewTick);
   }
 
@@ -322,7 +371,28 @@ export function initFvclip(
     const w = state.displaySize.w;
     const h = state.displaySize.h;
     const cells: typeof state.asciiCells = [];
-    if (!state.media || w < 1 || state.media.readyState < 2) {
+    if (!state.media || w < 1) {
+      state.asciiCells = cells;
+      return cells;
+    }
+    const v = state.media;
+    const nearEnd =
+      pingPongLoop &&
+      !playbackReverse &&
+      Number.isFinite(v.duration) &&
+      v.duration > 0 &&
+      v.currentTime >= v.duration - 0.08;
+    const weakSample =
+      pingPongLoop &&
+      (playbackReverse || v.ended || pendingForwardWarmup || nearEnd) &&
+      v.videoWidth > 0 &&
+      (v.readyState >= 1 || pendingForwardWarmup);
+    const staleOk =
+      Boolean(lastFrameCtx) &&
+      weakSample &&
+      lastFrameCanvas.width === w &&
+      lastFrameCanvas.height === h;
+    if (v.readyState < 2 && !weakSample) {
       state.asciiCells = cells;
       return cells;
     }
@@ -332,7 +402,41 @@ export function initFvclip(
     sampleCtx.imageSmoothingEnabled = true;
     sampleCtx.imageSmoothingQuality = "high";
     sampleCtx.filter = "none";
-    sampleCtx.drawImage(state.media, 0, 0, w, h);
+
+    let drew = false;
+    if (v.readyState >= 2) {
+      sampleCtx.drawImage(v, 0, 0, w, h);
+      drew = true;
+      if (lastFrameCtx) {
+        if (lastFrameCanvas.width !== w || lastFrameCanvas.height !== h) {
+          lastFrameCanvas.width = w;
+          lastFrameCanvas.height = h;
+        }
+        lastFrameCtx.drawImage(sampleCanvas, 0, 0);
+      }
+    } else if (weakSample) {
+      try {
+        sampleCtx.drawImage(v, 0, 0, w, h);
+        drew = true;
+      } catch {
+        /* decode / buffer ešte nie je kresliteľný */
+      }
+      if (!drew && staleOk) {
+        sampleCtx.drawImage(lastFrameCanvas, 0, 0);
+        drew = true;
+      } else if (drew && lastFrameCtx) {
+        if (lastFrameCanvas.width !== w || lastFrameCanvas.height !== h) {
+          lastFrameCanvas.width = w;
+          lastFrameCanvas.height = h;
+        }
+        lastFrameCtx.drawImage(sampleCanvas, 0, 0);
+      }
+    }
+
+    if (!drew) {
+      state.asciiCells = cells;
+      return cells;
+    }
 
     const id = sampleCtx.getImageData(0, 0, w, h);
     const data = id.data;
@@ -484,11 +588,16 @@ export function initFvclip(
   function loadVideo(src: string): void {
     if (destroyed) return;
     stopVideoPreviewLoop();
+    playbackReverse = false;
+    reverseLastTs = 0;
+    pendingForwardWarmup = false;
+    lastFrameCanvas.width = 0;
+    lastFrameCanvas.height = 0;
     state.media = null;
     const v = els.srcVideo;
     ensureVideoSilent(v);
     v.playsInline = true;
-    v.loop = loopVideo;
+    v.loop = loopVideo && !pingPongLoop;
     v.pause();
     v.removeAttribute("src");
     v.load();
@@ -532,10 +641,21 @@ export function initFvclip(
     startVideoPreviewLoop();
   }
   function onPause(): void {
+    if (pingPongLoop && els.srcVideo.ended) {
+      renderCanvas();
+      return;
+    }
     stopVideoPreviewLoop();
     renderCanvas();
   }
   function onEnded(): void {
+    if (pingPongLoop) {
+      playbackReverse = true;
+      reverseLastTs = 0;
+      startVideoPreviewLoop();
+      renderCanvas();
+      return;
+    }
     stopVideoPreviewLoop();
     renderCanvas();
   }
@@ -548,8 +668,14 @@ export function initFvclip(
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       els.srcVideo.pause();
       stopVideoPreviewLoop();
+      playbackReverse = false;
+      reverseLastTs = 0;
+      pendingForwardWarmup = false;
     } else {
       ensureVideoSilent(els.srcVideo);
+      playbackReverse = false;
+      reverseLastTs = 0;
+      pendingForwardWarmup = false;
       void els.srcVideo.play();
       startVideoPreviewLoop();
     }
@@ -598,6 +724,11 @@ export function initFvclip(
         clearTimeout(layoutDebounceTimer);
         layoutDebounceTimer = null;
       }
+      playbackReverse = false;
+      reverseLastTs = 0;
+      pendingForwardWarmup = false;
+      lastFrameCanvas.width = 0;
+      lastFrameCanvas.height = 0;
       els.srcVideo.pause();
       els.srcVideo.removeAttribute("src");
       els.srcVideo.load();
