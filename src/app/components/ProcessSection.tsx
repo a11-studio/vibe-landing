@@ -1,4 +1,4 @@
-import { Fragment } from "react";
+import { Fragment, lazy, Suspense, useEffect, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { LayoutContainer, LayoutGrid } from "@/app/components/layout";
 import { RevealHeadline } from "@/app/components/RevealHeadline";
@@ -6,9 +6,36 @@ import imgSenior from "@/assets/image-1.svg?url";
 import imgFlexible from "@/assets/image-2.svg?url";
 import imgPrototype from "@/assets/image-3.svg?url";
 
+const ApproachWebGLImage = lazy(() =>
+  import("@/app/components/ApproachWebGLImage").then((m) => ({
+    default: m.ApproachWebGLImage,
+  })),
+);
+
 const PROCESS_CARD_ENTER_Y = 30;
 const PROCESS_CARD_STAGGER_S = 0.14;
 const PROCESS_CARD_DURATION_S = 0.55;
+
+/** WebGL magnet: myš + dosť široké okno (DevTools mobile width → vypnuté; čisto pointer nestačí). */
+const APPROACH_MAGNET_MEDIA =
+  "(hover: hover) and (pointer: fine) and (min-width: 768px)";
+
+function useApproachMagnetDesktop() {
+  const [allowed, setAllowed] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.matchMedia(APPROACH_MAGNET_MEDIA).matches;
+  });
+
+  useEffect(() => {
+    const mq = window.matchMedia(APPROACH_MAGNET_MEDIA);
+    const sync = () => setAllowed(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
+  return allowed;
+}
 
 interface ApproachCardProps {
   image: string;
@@ -16,14 +43,33 @@ interface ApproachCardProps {
   description: string;
 }
 
-function ApproachCard({ image, title, description }: ApproachCardProps) {
+function ApproachCard({
+  image,
+  title,
+  description,
+  reducedMotion,
+  magnetDesktop,
+}: ApproachCardProps & { reducedMotion: boolean; magnetDesktop: boolean }) {
   return (
     <div className="flex w-full min-w-0 flex-col gap-12 md:gap-14">
       <div
         className="flex w-full items-center justify-center overflow-hidden"
         style={{ borderRadius: 4, aspectRatio: "488 / 396" }}
       >
-        <img src={image} alt={title} className="h-full w-full object-contain" />
+        {reducedMotion || !magnetDesktop ? (
+          <img src={image} alt={title} className="h-full w-full object-contain" />
+        ) : (
+          <Suspense
+            fallback={<img src={image} alt={title} className="h-full w-full object-contain" />}
+          >
+            <ApproachWebGLImage
+              src={image}
+              alt={title}
+              reducedMotion={false}
+              className="h-full w-full min-h-0"
+            />
+          </Suspense>
+        )}
       </div>
       <div className="flex min-w-0 flex-col gap-3 text-center">
         <p
@@ -81,6 +127,7 @@ const CARDS: ApproachCardProps[] = [
  */
 export function ProcessSection() {
   const prefersReducedMotion = useReducedMotion();
+  const magnetDesktop = useApproachMagnetDesktop();
 
   return (
     <section
@@ -152,7 +199,11 @@ export function ProcessSection() {
                   ease: [0.22, 1, 0.36, 1],
                 }}
               >
-                <ApproachCard {...card} />
+                <ApproachCard
+                  {...card}
+                  reducedMotion={!!prefersReducedMotion}
+                  magnetDesktop={magnetDesktop}
+                />
               </motion.div>
               {index < CARDS.length - 1 ? (
                 <div

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import type { CSSProperties } from "react";
 import imgBanner from "@/assets/banner.png";
 import imgRege from "@/assets/rege.png";
 import imgSelfcheckPhoto from "@/assets/selfcheck.png";
@@ -138,39 +139,47 @@ function ProjectCardText({ project }: { project: ProjectEntry }) {
 /** Silencio + Realitiez: spodné hrany obrázkov v jednej rovine — Realitiez je len posunutý nadol (`items-end` / `self-end`), obrázky bez natiahnutia orezania. */
 function ProjectsRow1Aligned({ left, right }: { left: ProjectEntry; right: ProjectEntry }) {
   return (
-    <div className="col-span-12 flex w-full flex-col gap-6 md:gap-8">
-      <div className="grid w-full grid-cols-12 gap-x-5">
-        <div
-          className="col-span-12 w-full overflow-hidden md:col-span-7 md:self-start"
-          style={{ borderRadius: 4 }}
-        >
-          <img
-            src={left.image}
-            alt=""
-            className="block aspect-[1064/576] w-full object-cover"
-          />
-        </div>
-        <div className="hidden min-h-px md:col-span-1 md:block" aria-hidden />
-        <div className="col-span-12 w-full md:col-span-4 md:self-end">
-          <div className="w-full overflow-hidden" style={{ borderRadius: 4 }}>
+    <>
+      {/* Mobile: každý projekt ako box — médium, potom text */}
+      <div className="col-span-12 flex flex-col gap-10 md:hidden">
+        <ProjectCard project={left} size="large" />
+        <ProjectCard project={right} size="medium" />
+      </div>
+
+      <div className="col-span-12 hidden w-full flex-col gap-6 md:flex md:gap-8">
+        <div className="grid w-full grid-cols-12 gap-x-5">
+          <div
+            className="col-span-12 w-full overflow-hidden md:col-span-7 md:self-start"
+            style={{ borderRadius: 4 }}
+          >
             <img
-              src={right.image}
+              src={left.image}
               alt=""
-              className="block aspect-[600/325] w-full object-cover"
+              className="block aspect-[1064/576] w-full object-cover"
             />
+          </div>
+          <div className="hidden min-h-px md:col-span-1 md:block" aria-hidden />
+          <div className="col-span-12 w-full md:col-span-4 md:self-end">
+            <div className="w-full overflow-hidden" style={{ borderRadius: 4 }}>
+              <img
+                src={right.image}
+                alt=""
+                className="block aspect-[600/325] w-full object-cover"
+              />
+            </div>
+          </div>
+        </div>
+        <div className="grid w-full grid-cols-12 gap-x-5">
+          <div className="col-span-12 md:col-span-7">
+            <ProjectCardText project={left} />
+          </div>
+          <div className="hidden min-h-px md:col-span-1 md:block" aria-hidden />
+          <div className="col-span-12 md:col-span-4">
+            <ProjectCardText project={right} />
           </div>
         </div>
       </div>
-      <div className="grid w-full grid-cols-12 gap-x-5">
-        <div className="col-span-12 md:col-span-7">
-          <ProjectCardText project={left} />
-        </div>
-        <div className="hidden min-h-px md:col-span-1 md:block" aria-hidden />
-        <div className="col-span-12 md:col-span-4">
-          <ProjectCardText project={right} />
-        </div>
-      </div>
-    </div>
+    </>
   );
 }
 
@@ -183,31 +192,38 @@ function ProjectsRow3SpotifyMetric({
   metricBackgroundImage: string;
 }) {
   return (
-    <div className="col-span-12 flex w-full flex-col gap-6 md:gap-8">
-      <div className="grid w-full grid-cols-12 gap-x-5">
-        <div
-          className="col-span-12 w-full overflow-hidden md:col-span-7 md:self-start"
-          style={{ borderRadius: 4 }}
-        >
-          <img
-            src={project.image}
-            alt=""
-            className="block aspect-[1064/576] w-full object-cover"
-          />
+    <>
+      <div className="col-span-12 flex flex-col gap-10 md:hidden">
+        <ProjectCard project={project} size="large" />
+        <ProjectsMetricCard backgroundImage={metricBackgroundImage} />
+      </div>
+
+      <div className="col-span-12 hidden w-full flex-col gap-6 md:flex md:gap-8">
+        <div className="grid w-full grid-cols-12 gap-x-5">
+          <div
+            className="col-span-12 w-full overflow-hidden md:col-span-7 md:self-start"
+            style={{ borderRadius: 4 }}
+          >
+            <img
+              src={project.image}
+              alt=""
+              className="block aspect-[1064/576] w-full object-cover"
+            />
+          </div>
+          <div className="hidden min-h-px md:col-span-1 md:block" aria-hidden />
+          <div className="col-span-12 w-full md:col-span-4 md:self-end">
+            <ProjectsMetricCard backgroundImage={metricBackgroundImage} />
+          </div>
         </div>
-        <div className="hidden min-h-px md:col-span-1 md:block" aria-hidden />
-        <div className="col-span-12 w-full md:col-span-4 md:self-end">
-          <ProjectsMetricCard backgroundImage={metricBackgroundImage} />
+        <div className="grid w-full grid-cols-12 gap-x-5">
+          <div className="col-span-12 md:col-span-7">
+            <ProjectCardText project={project} />
+          </div>
+          <div className="hidden min-h-px md:col-span-1 md:block" aria-hidden />
+          <div className="hidden md:col-span-4 md:block" aria-hidden />
         </div>
       </div>
-      <div className="grid w-full grid-cols-12 gap-x-5">
-        <div className="col-span-12 md:col-span-7">
-          <ProjectCardText project={project} />
-        </div>
-        <div className="hidden min-h-px md:col-span-1 md:block" aria-hidden />
-        <div className="hidden md:col-span-4 md:block" aria-hidden />
-      </div>
-    </div>
+    </>
   );
 }
 
@@ -231,8 +247,13 @@ function ProjectCard({
           <img
             src={project.image}
             alt=""
-            className="block w-full object-cover"
-            style={{ height: fixedH, maxHeight: fixedH }}
+            className="block h-auto w-full object-cover md:h-[var(--project-fixed-img-h)] md:max-h-[var(--project-fixed-img-h)] md:aspect-auto"
+            style={
+              {
+                aspectRatio: aspect,
+                ["--project-fixed-img-h" as string]: `${fixedH}px`,
+              } as CSSProperties
+            }
           />
         ) : (
           <img
@@ -370,20 +391,22 @@ export function ProjectsSection() {
           </p>
         </div>
 
-        <LayoutGrid className="gap-y-[clamp(96px,14vw,200px)]">
+        <LayoutGrid className="gap-y-12 md:gap-y-[clamp(96px,14vw,200px)]">
           <ProjectsRow1Aligned left={p0} right={p1} />
 
-          {/* Row 2 — 4 · 1 · 3 · 1 · 3 */}
-          <div className="col-span-12 md:col-span-4">
-            <ProjectCard project={p2} size="medium" />
-          </div>
-          <GridSpacer />
-          <div className="col-span-12 md:col-span-3">
-            <ProjectCard project={p3} size="medium" />
-          </div>
-          <GridSpacer />
-          <div className="col-span-12 md:col-span-3">
-            <ProjectCard project={p4} size="medium" />
+          {/* Row 2 — 4 · 1 · 3 · 1 · 3; mobile: jeden stĺpec, menšie medzery medzi kartami */}
+          <div className="col-span-12 flex flex-col gap-10 md:contents">
+            <div className="col-span-12 md:col-span-4">
+              <ProjectCard project={p2} size="medium" />
+            </div>
+            <GridSpacer />
+            <div className="col-span-12 md:col-span-3">
+              <ProjectCard project={p3} size="medium" />
+            </div>
+            <GridSpacer />
+            <div className="col-span-12 md:col-span-3">
+              <ProjectCard project={p4} size="medium" />
+            </div>
           </div>
 
           {/* Row 3 — 7 · 1 · 4 (Spotify + metrika) */}

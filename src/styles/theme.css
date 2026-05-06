@@ -284,6 +284,21 @@ html {
   padding-right: clamp(3px, 0.45vw, 8px);
 }
 
+/* Competitor headline: negatívny tracking + overflow na maskách (rovnako ako team). */
+.competitor-section-headline {
+  padding-inline: clamp(2px, 0.25vw, 6px);
+  box-sizing: content-box;
+}
+
+.competitor-section-headline .reveal-headline__mask--inline {
+  padding-right: max(0.05em, 2px);
+  padding-left: 0.015em;
+}
+
+.competitor-section-headline .reveal-line-group {
+  padding-right: clamp(3px, 0.45vw, 8px);
+}
+
 /* Competitor — Vibe rám: jemná rotácia textúry v „okraji“ (dojem pohybu gradientu). */
 @keyframes competitor-vibe-border-rotate {
   from {
@@ -321,6 +336,43 @@ html {
   .competitor-vibe-frame__orbit {
     animation: none;
     transform: translate(-50%, -50%);
+  }
+}
+
+/* Mobile footer flower: fvclip rastie zo šírky — pri vysokom portrait (veľké svh) dorovnávame veľkosť cez scale + svh/vw. */
+@media (max-width: 767px) {
+  .footer-mobile-flower-visual {
+    transform-origin: bottom center;
+    transform: scale(
+      min(
+        2.15,
+        max(
+          1.02,
+          (100svh / 500) * max(1, min(1.5, 100svh / (100vw * 1.22)))
+        )
+      )
+    );
+  }
+}
+
+/* Mobile footer flower: výška > 600 px — ďalších ~1.6× oproti základné škále nižšie */
+@media (max-width: 767px) and (min-height: 601px) {
+  .footer-mobile-flower-visual {
+    transform: scale(
+      min(
+        3.44,
+        max(
+          1.632,
+          (100svh / 500) * max(1, min(1.5, 100svh / (100vw * 1.22))) * 1.6
+        )
+      )
+    );
+  }
+}
+
+@media (max-width: 767px) and (prefers-reduced-motion: reduce) {
+  .footer-mobile-flower-visual {
+    transform: none;
   }
 }
 

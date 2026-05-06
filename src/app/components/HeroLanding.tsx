@@ -84,8 +84,8 @@ function MenuToggleIcon({ open }: { open: boolean }) {
 }
 
 const MOBILE_NAV = [
-  { label: "About", href: "#process" },
   { label: "Projects", href: "#work" },
+  { label: "About", href: "#process" },
   { label: "Team", href: "#team" },
 ] as const;
 
@@ -104,6 +104,71 @@ const MENU_PANEL_CTA_DELAY_MS = MENU_PANEL_EMAIL_DELAY_MS + MENU_PANEL_AFTER_EMA
 const MENU_PANEL_BOTTOM_DURATION_MS = 560;
 /** Jemnejší „výdych“ na konci kroku — pôsobi menej plocho ako lineárny ease */
 const MENU_PANEL_EASE = "cubic-bezier(0.19, 1, 0.22, 1)";
+
+/** Figma 626:2 — pill hover: bg rgba(227,234,239,0.6), text rgba(0,0,0,0.7), radius 50px */
+
+const navLinkPillDesktopClass = cn(
+  "inline-flex items-center justify-center rounded-[50px] text-[15px] font-medium whitespace-nowrap",
+  "text-black transition-[background-color,color] duration-200 ease-out",
+  "motion-reduce:hover:bg-transparent motion-reduce:hover:text-black",
+);
+
+function HeroDesktopNavLink({
+  item,
+  onNavigate,
+}: {
+  item: (typeof MOBILE_NAV)[number];
+  onNavigate: () => void;
+}) {
+  return (
+    <a
+      href={item.href}
+      className={cn(
+        navLinkPillDesktopClass,
+        "px-4 py-2",
+        "hover:bg-[rgba(227,234,239,0.6)] hover:text-[rgba(0,0,0,0.7)]",
+      )}
+      onClick={onNavigate}
+    >
+      {item.label}
+    </a>
+  );
+}
+
+function HeroNavMenuLink({
+  item,
+  index,
+  reveal,
+  onRequestClose,
+}: {
+  item: (typeof MOBILE_NAV)[number];
+  index: number;
+  reveal: boolean;
+  onRequestClose: () => void;
+}) {
+  return (
+    <li>
+      <a
+        href={item.href}
+        className="block text-center text-[22px] font-medium leading-none text-black tracking-[-0.84px] transition-opacity duration-200 hover:opacity-50 sm:text-[28px]"
+        onClick={onRequestClose}
+      >
+        <span className="nav-menu-panel__mask">
+          <span
+            className="nav-menu-panel__line"
+            style={{
+              animationDelay: reveal
+                ? `${index * MENU_PANEL_NAV_STAGGER_MS}ms`
+                : "0ms",
+            }}
+          >
+            {item.label}
+          </span>
+        </span>
+      </a>
+    </li>
+  );
+}
 
 // ─── Biely zaoblený box pod pill barom (Figma 609:3277) ───────────────────────
 function NavMenuPanel({
@@ -163,26 +228,13 @@ function NavMenuPanel({
       >
         <ul className="m-0 flex w-full max-w-full list-none flex-col items-center gap-6 p-0 sm:gap-8">
           {MOBILE_NAV.map((item, index) => (
-            <li key={item.href}>
-              <a
-                href={item.href}
-                className="block text-center text-[22px] font-medium leading-none text-black tracking-[-0.84px] transition-opacity duration-200 hover:opacity-50 sm:text-[28px]"
-                onClick={onRequestClose}
-              >
-                <span className="nav-menu-panel__mask">
-                  <span
-                    className="nav-menu-panel__line"
-                    style={{
-                      animationDelay: reveal
-                        ? `${index * MENU_PANEL_NAV_STAGGER_MS}ms`
-                        : "0ms",
-                    }}
-                  >
-                    {item.label}
-                  </span>
-                </span>
-              </a>
-            </li>
+            <HeroNavMenuLink
+              key={item.href}
+              item={item}
+              index={index}
+              reveal={reveal}
+              onRequestClose={onRequestClose}
+            />
           ))}
         </ul>
 
@@ -243,6 +295,10 @@ function Navbar({
   const closeRef = useRef<HTMLButtonElement>(null);
   const navRef = useRef<HTMLElement>(null);
   const [navWidthPx, setNavWidthPx] = useState<number | null>(null);
+  const [isSmDown, setIsSmDown] = useState(
+    () =>
+      typeof window !== "undefined" && window.matchMedia("(max-width: 639px)").matches
+  );
   const [layerMounted, setLayerMounted] = useState(false);
   const [layerVisible, setLayerVisible] = useState(false);
   const scrolled = scrollY > 40;
@@ -252,11 +308,19 @@ function Navbar({
   useLayoutEffect(() => {
     const el = navRef.current;
     if (!el) return;
-    const sync = () => setNavWidthPx(el.offsetWidth);
+    const mq = window.matchMedia("(max-width: 639px)");
+    const sync = () => {
+      setIsSmDown(mq.matches);
+      setNavWidthPx(el.offsetWidth);
+    };
     sync();
     const ro = new ResizeObserver(sync);
     ro.observe(el);
-    return () => ro.disconnect();
+    mq.addEventListener("change", sync);
+    return () => {
+      ro.disconnect();
+      mq.removeEventListener("change", sync);
+    };
   }, []);
 
   useEffect(() => {
@@ -328,7 +392,7 @@ function Navbar({
         <LayoutContainer className="flex w-full max-w-full flex-col items-center">
           <nav
             ref={navRef}
-            className="inline-flex max-w-full items-center gap-4 px-4 rounded-[70px] transition-all duration-500 sm:gap-10 sm:px-5"
+            className="inline-flex max-w-full items-center gap-4 px-4 rounded-[70px] transition-all duration-500 sm:w-[min(420px,calc(100vw-32px))] sm:gap-4 sm:px-5"
             style={{
               minHeight: 54,
               backgroundColor: scrolled ? "rgba(255,255,255,0.92)" : "rgba(255,255,255,1)",
@@ -351,18 +415,15 @@ function Navbar({
               <VibeLogo />
             </a>
 
-            <div className="hidden min-w-0 sm:flex sm:items-center sm:gap-10">
+            <div className="hidden min-w-0 flex-1 sm:flex sm:items-center sm:justify-between">
               {MOBILE_NAV.map((item) => (
-                <a
+                <HeroDesktopNavLink
                   key={item.href}
-                  href={item.href}
-                  className="text-[15px] font-medium text-black whitespace-nowrap transition-opacity duration-200 hover:opacity-50"
-                  onClick={() => {
+                  item={item}
+                  onNavigate={() => {
                     if (menuOpen) onMenuOpenChange(false);
                   }}
-                >
-                  {item.label}
-                </a>
+                />
               ))}
             </div>
 
@@ -387,7 +448,7 @@ function Navbar({
                 "motion-reduce:transition-none",
                 "transition-[opacity,transform]",
                 "ease-[cubic-bezier(0.16,1,0.3,1)]",
-                navWidthPx == null && "w-full max-w-[min(100%,420px)]",
+                isSmDown ? "w-full" : navWidthPx == null && "w-full max-w-[min(100%,420px)]",
               )}
               style={{
                 transitionDuration: `${MENU_LAYER_MS}ms`,
@@ -396,9 +457,9 @@ function Navbar({
                   ? "translateY(0) scale(1)"
                   : "translateY(-10px) scale(0.98)",
                 pointerEvents: layerVisible ? "auto" : "none",
-                ...(navWidthPx != null
+                ...(!isSmDown && navWidthPx != null
                   ? { width: navWidthPx, maxWidth: "100%" }
-                  : undefined),
+                  : {}),
               }}
             >
               <NavMenuPanel
@@ -551,12 +612,12 @@ export function HeroLanding() {
                 <RevealHeadline
                   as="h1"
                   inView={heroInView}
-                  lines={["Senior design team", "Assembled for you."]}
-                  className="text-white m-0"
+                  lines={["Designing the future", "with taste"]}
+                  className="m-0 font-medium text-white"
                   style={{
                     fontWeight: 500,
-                    fontSize: "clamp(40px, 5.5vw, 72px)",
-                    lineHeight: 1.05,
+                    fontSize: "clamp(34px, 5vw, 62px)",
+                    lineHeight: 0.96,
                     letterSpacing: "-2px",
                   }}
                 />
@@ -565,13 +626,16 @@ export function HeroLanding() {
             <RevealHeadline
               as="p"
               inView={heroInView}
-              lines={["We turn product ideas into device-ready, coded prototypes"]}
+              lines={[
+                "Blending culture, technology, and aesthetics",
+                "into high-class experiences.",
+              ]}
               staggerBaseDelayS={0.6}
-              className="m-0 max-w-[min(100%,42rem)] text-center text-white/90 mt-1 sm:mt-1.5"
+              className="m-0 max-w-[min(100%,42rem)] text-center font-normal text-white/90 mt-1 sm:mt-1.5"
               style={{
                 fontWeight: 400,
-                fontSize: "clamp(15px, 1.8vw, 24px)",
-                lineHeight: 1.38,
+                fontSize: "clamp(14px, 1.5vw, 20px)",
+                lineHeight: 1.42,
               }}
             />
           </div>

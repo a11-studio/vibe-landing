@@ -423,22 +423,6 @@ export function AboutSection() {
               <CardMichaela />
               <Label name="Michaela Fias" role="Brand Designer" compact />
             </div>
-          </div>
-          <TeamStatCell
-            format="plus"
-            start={10}
-            end={50}
-            label="Successful projects shipped"
-            accentLine="right"
-          />
-          <TeamStatCell
-            format="days"
-            start={30}
-            end={14}
-            label="From idea to testable experience"
-            accentLine="left"
-          />
-          <div className="grid max-w-[min(100%,320px)] grid-cols-1 gap-y-10">
             <div className="min-w-0">
               <CardPatrik />
               <Label name="Patrik Smejkal" role="Product Manager" compact />

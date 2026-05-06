@@ -13,10 +13,6 @@ const H_RULE_INTRO_DELAY_MS = 240;
 const H_RULE_STAGGER_MS = 85;
 const H_RULE_DRAW_MS = 700;
 
-/** 12-col: 2 prázdne | 2 labels | 3 vibe | 3 agency | 2 prázdne — ľavý okraj stĺpca Vibe (1-based col 5 → 4 „fr“ zo začiatku). */
-const VIBE_COL_START_FR = 4;
-const VIBE_COL_SPAN_FR = 3;
-
 function VibeLogoWhite() {
   return (
     <svg width="51" height="24" viewBox="0 0 50.3951 24" fill="none" aria-hidden>
@@ -177,18 +173,19 @@ export function CompetitorSection() {
     <section
       id="competitor"
       data-scroll-section
-      className="relative w-full text-white"
+      className="relative min-h-svh w-full text-white"
       style={{ backgroundColor: SECTION_BG }}
     >
       <LayoutContainer
+        className="max-md:px-3"
         style={{
           paddingTop: "clamp(72px, 9vw, 140px)",
           paddingBottom: "clamp(72px, 9vw, 140px)",
         }}
       >
-        <header className="mx-auto max-w-[920px] text-center">
+        <header className="mx-auto min-w-0 max-w-[920px] text-center">
           <p
-            className="m-0 uppercase"
+            className="m-0 px-[clamp(2px,0.25vw,6px)] uppercase"
             style={{
               fontWeight: 500,
               fontSize: "clamp(12px, 0.95vw, 18px)",
@@ -202,6 +199,7 @@ export function CompetitorSection() {
           </p>
           <RevealHeadline
             lines={["So why companies choose us?"]}
+            wrapperClassName="competitor-section-headline"
             className="m-0 text-center text-white"
             style={{
               fontWeight: 500,
@@ -215,20 +213,16 @@ export function CompetitorSection() {
         </header>
 
         <div className="mx-auto mt-[clamp(40px,6vw,72px)] max-w-[1220px] overflow-x-auto">
-          <div ref={tableShellRef} className="relative min-w-[min(100%,640px)]">
+          <div ref={tableShellRef} className="relative w-full min-w-0">
             {/* Rám Vibe: stĺpce 5–7 (3/12 šírky), vertikálne cez hlavičku + dátové riadky; čiary z-[15] sú navrchu. */}
             <div
-              className="pointer-events-none absolute top-0 z-[1]"
-              style={{
-                left: `calc(100% * ${VIBE_COL_START_FR} / 12)`,
-                width: `calc(100% * ${VIBE_COL_SPAN_FR} / 12)`,
-                bottom: 0,
-              }}
+              className="pointer-events-none absolute left-0 top-0 z-[1] w-[calc(100%*7/12)] md:left-[calc(100%*4/12)] md:w-[calc(100%*3/12)]"
+              style={{ bottom: 0 }}
             >
               <div className="pointer-events-auto h-full">
                 <VibeColumnFrame>
                   <div className="flex h-full min-h-full flex-col">
-                    <div className="flex shrink-0 justify-center px-4 pb-6 pt-7 md:px-5 md:pb-7 md:pt-8">
+                    <div className="flex shrink-0 justify-center px-4 pb-8 pt-8 md:px-5 md:pb-10 md:pt-10">
                       <span className="inline-flex" aria-label="Vibe">
                         <VibeLogoWhite />
                       </span>
@@ -236,7 +230,7 @@ export function CompetitorSection() {
                     {COMPETITOR_ROWS.map((row) => (
                       <div
                         key={row.label}
-                        className="flex min-h-0 flex-1 flex-col items-center justify-center gap-2 px-3 py-5 md:flex-row md:gap-2.5 md:px-4 md:py-6"
+                        className="flex min-h-0 flex-1 flex-col items-center justify-center gap-2.5 px-2 py-8 max-md:px-1.5 md:flex-row md:gap-3.5 md:px-4 md:py-10"
                       >
                         <span style={cellValue}>{row.vibe}</span>
                         <CheckMark />
@@ -249,15 +243,15 @@ export function CompetitorSection() {
 
             <div className="relative z-[2] flex flex-col">
               <div className="grid grid-cols-12">
-                <div className="col-span-2 min-w-0" aria-hidden />
-                <div className="col-span-2 min-w-0" aria-hidden />
+                <div className="col-span-2 min-w-0 max-md:hidden" aria-hidden />
+                <div className="col-span-2 min-w-0 max-md:hidden" aria-hidden />
                 <div
-                  className="col-span-3 min-w-0"
-                  style={{ minHeight: "clamp(72px, 10vw, 88px)" }}
+                  className="col-span-3 min-w-0 max-md:col-span-7"
+                  style={{ minHeight: "clamp(96px, 12vw, 112px)" }}
                   aria-hidden
                 />
                 <div
-                  className="col-span-3 flex min-w-0 items-end justify-center pb-6 text-center font-medium"
+                  className="col-span-3 flex min-w-0 max-w-full items-end justify-center pb-8 text-center font-medium max-md:col-span-5 md:pb-10"
                   style={{
                     fontSize: 24,
                     color: "#ffffff",
@@ -267,19 +261,19 @@ export function CompetitorSection() {
                 >
                   Agency
                 </div>
-                <div className="col-span-2 min-w-0" aria-hidden />
+                <div className="col-span-2 min-w-0 max-md:hidden" aria-hidden />
               </div>
 
               <div className="grid grid-cols-12">
-                <div className="col-span-2" aria-hidden />
-                <div className="col-span-8">
+                <div className="col-span-2 max-md:hidden" aria-hidden />
+                <div className="col-span-8 max-md:col-span-12">
                   <CompetitorHRule
                     lineIndex={0}
                     reveal={lineReveal}
                     reducedMotion={reducedMotion}
                   />
                 </div>
-                <div className="col-span-2" aria-hidden />
+                <div className="col-span-2 max-md:hidden" aria-hidden />
               </div>
 
               {COMPETITOR_ROWS.map((row, rowIndex) => (
@@ -288,36 +282,36 @@ export function CompetitorSection() {
                     className="competitor-table__row grid grid-cols-12 items-stretch"
                     data-competitor-row-index={rowIndex}
                   >
-                    <div className="col-span-2 min-w-0" aria-hidden />
+                    <div className="col-span-2 min-w-0 max-md:hidden" aria-hidden />
                     <div
-                      className="col-span-2 flex min-w-0 items-center py-5 md:py-6"
+                      className="col-span-2 hidden min-w-0 max-w-full items-center break-words py-8 md:flex md:py-10"
                       style={cellLabel}
                     >
                       {row.label}
                     </div>
                     <div
-                      className="col-span-3 min-w-0 py-5 md:py-6"
+                      className="col-span-3 min-w-0 py-8 max-md:col-span-7 md:py-10"
                       aria-hidden
                     />
                     <div
-                      className="col-span-3 flex min-w-0 items-center justify-center py-5 text-center md:py-6"
+                      className="col-span-3 flex min-w-0 max-w-full items-center justify-center py-8 text-center max-md:col-span-5 max-md:break-words md:col-span-3 md:py-10"
                       style={cellValue}
                     >
                       {row.agency}
                     </div>
-                    <div className="col-span-2 min-w-0" aria-hidden />
+                    <div className="col-span-2 min-w-0 max-md:hidden" aria-hidden />
                   </div>
                   {rowIndex < COMPETITOR_ROWS.length - 1 ? (
                     <div className="grid grid-cols-12">
-                      <div className="col-span-2" aria-hidden />
-                      <div className="col-span-8">
+                      <div className="col-span-2 max-md:hidden" aria-hidden />
+                      <div className="col-span-8 max-md:col-span-12">
                         <CompetitorHRule
                           lineIndex={rowIndex + 1}
                           reveal={lineReveal}
                           reducedMotion={reducedMotion}
                         />
                       </div>
-                      <div className="col-span-2" aria-hidden />
+                      <div className="col-span-2 max-md:hidden" aria-hidden />
                     </div>
                   ) : null}
                 </Fragment>

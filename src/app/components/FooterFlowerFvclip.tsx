@@ -8,9 +8,12 @@ import { initFvclip } from "@/lib/fvclipInit";
 export function FooterFlowerFvclip({
   className,
   style,
+  /** Hustejšia mriežka + vyššia pravdepodobnosť bodu — lepšia čitateľnosť tvaru na úzkych displejoch. */
+  dense = false,
 }: {
   className?: string;
   style?: CSSProperties;
+  dense?: boolean;
 }) {
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -47,12 +50,12 @@ export function FooterFlowerFvclip({
       <div className="fvclip__tuning" hidden>
         <input data-fv="contrast" type="hidden" value="1.74" />
         <input data-fv="brightness" type="hidden" value="-46" />
-        <input data-fv="density" type="hidden" value="0.67" />
-        <input data-fv="gridSize" type="hidden" value="14" />
+        <input data-fv="density" type="hidden" value={dense ? "0.88" : "0.67"} />
+        <input data-fv="gridSize" type="hidden" value={dense ? "9" : "14"} />
         <input data-fv="overlayOpacity" type="hidden" value="1" />
-        <input data-fv="charScale" type="hidden" value="0.81" />
-        <input data-fv="brightnessInfluence" type="hidden" value="0.7" />
-        <input data-fv="edgeInfluence" type="hidden" value="0.42" />
+        <input data-fv="charScale" type="hidden" value={dense ? "0.72" : "0.81"} />
+        <input data-fv="brightnessInfluence" type="hidden" value={dense ? "0.78" : "0.7"} />
+        <input data-fv="edgeInfluence" type="hidden" value={dense ? "0.48" : "0.42"} />
         <input data-fv="colorExclusionEnabled" type="checkbox" defaultChecked />
         <input data-fv="excludeColor" type="color" defaultValue="#5dade2" />
         <input data-fv="colorTolerance" type="hidden" value="50" />
