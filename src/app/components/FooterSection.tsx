@@ -4,6 +4,8 @@ import { cn } from "@/app/components/ui/utils";
 import { LayoutContainer, LayoutGrid } from "@/app/components/layout";
 import { FooterFlowerFvclip } from "@/app/components/FooterFlowerFvclip";
 import { RevealHeadline } from "@/app/components/RevealHeadline";
+import { VibeLogoLottieHover, VIBE_LOGO_FOOTER_PX } from "@/app/components/VibeLogoLottieHover";
+import vibeLogoIntroWhiteAnimation from "@/assets/lottie/Vibe_logo_anim_V1_intro_white.json";
 import svgPaths from "@/imports/Footer/svg-39tshfia8v";
 
 /** Figma footer — farba pozadia. */
@@ -138,18 +140,6 @@ function usePragueTime() {
   return time;
 }
 
-// ─── Vibe logo (white) ────────────────────────────────────────────────────────
-function VibeLogoWhite() {
-  return (
-    <svg width="51" height="24" viewBox="0 0 50.3951 24" fill="none">
-      <path d={svgPaths.p2641c400} fill="white" />
-      <path d={svgPaths.p11b87d00} fill="white" />
-      <path d={svgPaths.p2bd5b200} fill="white" />
-      <path d={svgPaths.pdd8c00}   fill="white" />
-    </svg>
-  );
-}
-
 // ─── Arrow (Figma: arrow-top-left, ↗) ─────────────────────────────────────────
 function ArrowRight() {
   return (
@@ -192,7 +182,26 @@ function useIsNarrowFooter(): boolean {
 function FooterSocialRow({ reducedMotion }: { reducedMotion: boolean }) {
   return (
     <div className="col-span-12 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
-      <VibeLogoWhite />
+      <VibeLogoLottieHover
+        animationData={vibeLogoIntroWhiteAnimation}
+        reducedMotion={reducedMotion}
+        width={VIBE_LOGO_FOOTER_PX.w}
+        height={VIBE_LOGO_FOOTER_PX.h}
+        staticMark={
+          <svg
+            width={VIBE_LOGO_FOOTER_PX.w}
+            height={VIBE_LOGO_FOOTER_PX.h}
+            viewBox="0 0 50.3951 24"
+            fill="none"
+            className="block max-h-full max-w-full"
+          >
+            <path d={svgPaths.p2641c400} fill="white" />
+            <path d={svgPaths.p11b87d00} fill="white" />
+            <path d={svgPaths.p2bd5b200} fill="white" />
+            <path d={svgPaths.pdd8c00} fill="white" />
+          </svg>
+        }
+      />
       <nav className="flex w-full max-md:flex-nowrap max-md:justify-between max-md:gap-0 items-center gap-x-6 gap-y-2 sm:w-auto sm:justify-start sm:gap-8">
         {(
           [

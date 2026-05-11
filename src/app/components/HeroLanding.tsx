@@ -1,6 +1,9 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
+import { useReducedMotion } from "motion/react";
 import { useInView } from "@/app/hooks/useInView";
 import { cn } from "@/app/components/ui/utils";
+import { VibeLogoLottieHover, VIBE_LOGO_NAV_PX } from "@/app/components/VibeLogoLottieHover";
+import vibeLogoIntroAnimation from "@/assets/lottie/Vibe_logo_anim_V1_intro.json";
 import svgPaths from "@/imports/MainContainer/svg-mqtv51ktgp";
 import imgBackgroundImage from "@/imports/image.png";
 import imgHeadlineBlur from "@/imports/blur.png";
@@ -15,15 +18,31 @@ import { FooterSection } from "@/app/components/FooterSection";
 import { LayoutContainer } from "@/app/components/layout";
 import { RevealHeadline } from "@/app/components/RevealHeadline";
 
-// ─── Vibe Logo ────────────────────────────────────────────────────────────────
+// ─── Vibe Logo (HL menu): Lottie intro na hover; pokoj = posledný frame Lottie ─
 function VibeLogo() {
+  const reducedMotion = useReducedMotion();
+
   return (
-    <svg width="51" height="24" viewBox="0 0 50.3951 24" fill="none">
-      <path d={svgPaths.p2ed8a900} fill="black" />
-      <path d={svgPaths.pf4d1e80}  fill="black" />
-      <path d={svgPaths.p2bd5b200} fill="black" />
-      <path d={svgPaths.p3ab9e400} fill="black" />
-    </svg>
+    <VibeLogoLottieHover
+      animationData={vibeLogoIntroAnimation}
+      reducedMotion={!!reducedMotion}
+      width={VIBE_LOGO_NAV_PX.w}
+      height={VIBE_LOGO_NAV_PX.h}
+      staticMark={
+        <svg
+          width={VIBE_LOGO_NAV_PX.w}
+          height={VIBE_LOGO_NAV_PX.h}
+          viewBox="0 0 50.3951 24"
+          fill="none"
+          className="block max-h-full max-w-full"
+        >
+          <path d={svgPaths.p2ed8a900} fill="black" />
+          <path d={svgPaths.pf4d1e80} fill="black" />
+          <path d={svgPaths.p2bd5b200} fill="black" />
+          <path d={svgPaths.p3ab9e400} fill="black" />
+        </svg>
+      }
+    />
   );
 }
 

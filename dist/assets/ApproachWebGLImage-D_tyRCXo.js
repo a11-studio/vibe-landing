@@ -1,4 +1,4 @@
-import{r as Ye,a as tS,j as un}from"./index-B6Pq3niM.js";function nS(r){return r&&r.__esModule&&Object.prototype.hasOwnProperty.call(r,"default")?r.default:r}/**
+import{r as Ye,a as tS,g as nS,j as un}from"./index-BK5QUo1J.js";/**
  * @license
  * Copyright 2010-2026 Three.js Authors
  * SPDX-License-Identifier: MIT
