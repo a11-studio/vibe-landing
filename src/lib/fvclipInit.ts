@@ -22,6 +22,19 @@ export type InitFvclipOptions = {
   pingPong?: boolean;
 };
 
+/**
+ * Sampling canvas width is capped here — the ASCII grid has a ~9–14 px cell,
+ * so anything wider just wastes pixels in `drawImage` + `getImageData` without
+ * adding visual detail. Caps the per‑frame CPU cost on wide viewports.
+ */
+const MAX_SAMPLE_WIDTH = 480;
+/**
+ * Visible canvas width is capped to keep the ASCII silhouette at a sensible
+ * size on very large viewports (was previously capped implicitly by the
+ * source video's native resolution).
+ */
+const MAX_DISPLAY_WIDTH = 1280;
+
 function qs(root: HTMLElement, name: string): HTMLInputElement | null {
   return root.querySelector(`[data-fv="${name}"]`);
 }
@@ -92,17 +105,78 @@ export function initFvclip(
     };
   }
 
+  function getTheme(): { field: string; glyph: string } {
+    if (!cachedTheme) cachedTheme = readTheme();
+    return cachedTheme;
+  }
+
+  function getFonts(): string {
+    if (!cachedFonts) cachedFonts = readFonts();
+    return cachedFonts;
+  }
+
+  function invalidateStyles(): void {
+    cachedTheme = null;
+    cachedFonts = null;
+  }
+
   const state: {
     media: HTMLVideoElement | null;
+    /** Size of the visible canvases in CSS pixels — drives layout. */
     displaySize: { w: number; h: number };
+    /** Size of the in‑memory sampling canvas — drives per‑frame CPU cost. */
+    sampleSize: { w: number; h: number };
     dpr: number;
     asciiCells: Array<{ cx: number; cy: number; char: string; localOpacity: number }>;
   } = {
     media: null,
     displaySize: { w: 800, h: 450 },
+    sampleSize: { w: 800, h: 450 },
     dpr: 1,
     asciiCells: [],
   };
+
+  /**
+   * Cached layout fingerprint — used to skip the expensive canvas re-size dance
+   * in `configurePreviewCanvases()` when nothing actually changed since the
+   * previous frame.
+   */
+  let lastAppliedW = 0;
+  let lastAppliedH = 0;
+  let lastAppliedDpr = 0;
+  /**
+   * Cached visual styles. `getComputedStyle()` is surprisingly expensive, so
+   * the renderer reads it once at startup and again only on relayout / theme
+   * changes — not on every frame.
+   */
+  let cachedTheme: { field: string; glyph: string } | null = null;
+  let cachedFonts: string | null = null;
+  /**
+   * Cached tuning parameters. The hidden `<input data-fv="…">` values are
+   * essentially constants after mount; reading + parsing them on every cell
+   * was the second-biggest hotspot in the sampling loop.
+   */
+  type Tuning = {
+    contrast: number;
+    brightness: number;
+    density: number;
+    gridSize: number;
+    overlayOpacity: number;
+    charScale: number;
+    brightnessInfluence: number;
+    edgeInfluence: number;
+    colorExclusionEnabled: boolean;
+    excludeRgb: { r: number; g: number; b: number };
+    colorTolerance: number;
+    colorSoftness: number;
+    colorOnlyEnabled: boolean;
+    onlyRgb: { r: number; g: number; b: number };
+    onlyColorTolerance: number;
+    onlyColorSoftness: number;
+  };
+  let cachedTuning: Tuning | null = null;
+  /** True when IntersectionObserver reports the footer fully off-screen. */
+  let offscreen = false;
 
   const sampleCanvas = document.createElement("canvas");
   const sampleCtx = sampleCanvas.getContext("2d", { willReadFrequently: true });
@@ -133,6 +207,7 @@ export function initFvclip(
 
   function startVideoPreviewLoop(): void {
     if (destroyed) return;
+    if (offscreen) return;
     if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
     stopVideoPreviewLoop();
     videoPreviewRaf = requestAnimationFrame(videoPreviewTick);
@@ -210,6 +285,13 @@ export function initFvclip(
     const dpr = getBackingDpr();
     state.dpr = dpr;
 
+    if (w === lastAppliedW && h === lastAppliedH && dpr === lastAppliedDpr) {
+      return;
+    }
+    lastAppliedW = w;
+    lastAppliedH = h;
+    lastAppliedDpr = dpr;
+
     const bw = Math.max(1, Math.round(w * dpr));
     const bh = Math.max(1, Math.round(h * dpr));
 
@@ -237,20 +319,23 @@ export function initFvclip(
     const ih = v.videoHeight;
     if (iw < 1 || ih < 1) return;
     const targetW = layoutTargetW || readLayoutTargetWidth();
-    let w = Math.min(iw, targetW);
-    w = Math.max(1, w);
-    const h = Math.max(1, Math.round(ih * (w / iw)));
-    state.displaySize.w = w;
-    state.displaySize.h = h;
-    sampleCanvas.width = w;
-    sampleCanvas.height = h;
+    const displayW = Math.max(1, Math.min(targetW, MAX_DISPLAY_WIDTH));
+    const displayH = Math.max(1, Math.round(ih * (displayW / iw)));
+    const sampleW = Math.max(1, Math.min(displayW, iw, MAX_SAMPLE_WIDTH));
+    const sampleH = Math.max(1, Math.round(ih * (sampleW / iw)));
+    state.displaySize.w = displayW;
+    state.displaySize.h = displayH;
+    state.sampleSize.w = sampleW;
+    state.sampleSize.h = sampleH;
+    if (sampleCanvas.width !== sampleW) sampleCanvas.width = sampleW;
+    if (sampleCanvas.height !== sampleH) sampleCanvas.height = sampleH;
   }
 
   function drawPlaceholder(context: CanvasRenderingContext2D): void {
-    const theme = readTheme();
+    const theme = getTheme();
     const w = state.displaySize.w;
     const h = state.displaySize.h;
-    const FONT_STACK = readFonts();
+    const FONT_STACK = getFonts();
     context.globalCompositeOperation = "source-over";
     context.globalAlpha = 1;
     context.filter = "none";
@@ -266,7 +351,7 @@ export function initFvclip(
   }
 
   function drawBaseImage(context: CanvasRenderingContext2D): void {
-    const theme = readTheme();
+    const theme = getTheme();
     const w = state.displaySize.w;
     const h = state.displaySize.h;
     if (!state.media || w < 1) return;
@@ -341,12 +426,40 @@ export function initFvclip(
     return Number.isFinite(v) ? v : fallback;
   }
 
-  function overlayToneAdjust(L: number): number {
-    const c = numInput(els.contrast, 1.74);
-    const b = numInput(els.brightness, -46);
+  function readTuning(): Tuning {
+    return {
+      contrast: numInput(els.contrast, 1.74),
+      brightness: numInput(els.brightness, -46),
+      density: numInput(els.density, 0.67),
+      gridSize: parseInt(els.gridSize?.value || "14", 10) || 14,
+      overlayOpacity: numInput(els.overlayOpacity, 1),
+      charScale: numInput(els.charScale, 0.81),
+      brightnessInfluence: numInput(els.brightnessInfluence, 0.7),
+      edgeInfluence: numInput(els.edgeInfluence, 0.42),
+      colorExclusionEnabled: els.colorExclusionEnabled?.checked ?? false,
+      excludeRgb: hexToRgb(els.excludeColor?.value || "#5dade2"),
+      colorTolerance: numInput(els.colorTolerance, 50),
+      colorSoftness: numInput(els.colorSoftness, 40),
+      colorOnlyEnabled: els.colorOnlyEnabled?.checked ?? false,
+      onlyRgb: hexToRgb(els.onlyColor?.value || "#c9a87c"),
+      onlyColorTolerance: numInput(els.onlyColorTolerance, 48),
+      onlyColorSoftness: numInput(els.onlyColorSoftness, 42),
+    };
+  }
+
+  function getTuning(): Tuning {
+    if (!cachedTuning) cachedTuning = readTuning();
+    return cachedTuning;
+  }
+
+  function invalidateTuning(): void {
+    cachedTuning = null;
+  }
+
+  function overlayToneAdjust(L: number, contrast: number, brightness: number): number {
     let x = L / 255;
-    x = (x - 0.5) * c + 0.5;
-    return clamp(x * 255 + b, 0, 255);
+    x = (x - 0.5) * contrast + 0.5;
+    return clamp(x * 255 + brightness, 0, 255);
   }
 
   function mapCellToGlyph(L_adj: number, edgeNorm: number, edgeInfl: number): string {
@@ -370,8 +483,10 @@ export function initFvclip(
   function sampleOverlayData(): typeof state.asciiCells {
     const w = state.displaySize.w;
     const h = state.displaySize.h;
+    const sw = state.sampleSize.w;
+    const sh = state.sampleSize.h;
     const cells: typeof state.asciiCells = [];
-    if (!state.media || w < 1) {
+    if (!state.media || w < 1 || sw < 1) {
       state.asciiCells = cells;
       return cells;
     }
@@ -390,33 +505,36 @@ export function initFvclip(
     const staleOk =
       Boolean(lastFrameCtx) &&
       weakSample &&
-      lastFrameCanvas.width === w &&
-      lastFrameCanvas.height === h;
+      lastFrameCanvas.width === sw &&
+      lastFrameCanvas.height === sh;
     if (v.readyState < 2 && !weakSample) {
       state.asciiCells = cells;
       return cells;
     }
 
     sampleCtx.setTransform(1, 0, 0, 1, 0, 0);
-    sampleCtx.clearRect(0, 0, w, h);
+    sampleCtx.clearRect(0, 0, sw, sh);
+    // We're downscaling for analysis only — high-quality smoothing would
+    // burn CPU on something the user never sees. "low" is enough for the
+    // luminance / edge heuristics.
     sampleCtx.imageSmoothingEnabled = true;
-    sampleCtx.imageSmoothingQuality = "high";
+    sampleCtx.imageSmoothingQuality = "low";
     sampleCtx.filter = "none";
 
     let drew = false;
     if (v.readyState >= 2) {
-      sampleCtx.drawImage(v, 0, 0, w, h);
+      sampleCtx.drawImage(v, 0, 0, sw, sh);
       drew = true;
       if (lastFrameCtx) {
-        if (lastFrameCanvas.width !== w || lastFrameCanvas.height !== h) {
-          lastFrameCanvas.width = w;
-          lastFrameCanvas.height = h;
+        if (lastFrameCanvas.width !== sw || lastFrameCanvas.height !== sh) {
+          lastFrameCanvas.width = sw;
+          lastFrameCanvas.height = sh;
         }
         lastFrameCtx.drawImage(sampleCanvas, 0, 0);
       }
     } else if (weakSample) {
       try {
-        sampleCtx.drawImage(v, 0, 0, w, h);
+        sampleCtx.drawImage(v, 0, 0, sw, sh);
         drew = true;
       } catch {
         /* decode / buffer ešte nie je kresliteľný */
@@ -425,9 +543,9 @@ export function initFvclip(
         sampleCtx.drawImage(lastFrameCanvas, 0, 0);
         drew = true;
       } else if (drew && lastFrameCtx) {
-        if (lastFrameCanvas.width !== w || lastFrameCanvas.height !== h) {
-          lastFrameCanvas.width = w;
-          lastFrameCanvas.height = h;
+        if (lastFrameCanvas.width !== sw || lastFrameCanvas.height !== sh) {
+          lastFrameCanvas.width = sw;
+          lastFrameCanvas.height = sh;
         }
         lastFrameCtx.drawImage(sampleCanvas, 0, 0);
       }
@@ -438,21 +556,38 @@ export function initFvclip(
       return cells;
     }
 
-    const id = sampleCtx.getImageData(0, 0, w, h);
+    const id = sampleCtx.getImageData(0, 0, sw, sh);
     const data = id.data;
 
-    const cell = parseInt(els.gridSize?.value || "14", 10);
-    const density = numInput(els.density, 0.67);
-    const bInf = numInput(els.brightnessInfluence, 0.7);
-    const eInf = numInput(els.edgeInfluence, 0.42);
+    const t = getTuning();
+    const cell = t.gridSize;
+    const density = t.density;
+    const bInf = t.brightnessInfluence;
+    const eInf = t.edgeInfluence;
+    const edgeInfl = eInf;
+    const thresh = 0.1 + (1 - density) * 0.4;
 
     const cols = Math.ceil(w / cell);
     const rows = Math.ceil(h / cell);
+    const sScale = sw / w;
+
+    const exclusionOn = t.colorExclusionEnabled;
+    const onlyOn = t.colorOnlyEnabled;
+    const exRgb = t.excludeRgb;
+    const exTol = t.colorTolerance;
+    const exSoft = t.colorSoftness;
+    const onlyRgb = t.onlyRgb;
+    const onlyTol = t.onlyColorTolerance;
+    const onlySoft = t.onlyColorSoftness;
+    const contrast = t.contrast;
+    const brightness = t.brightness;
 
     let gx: number;
     let gy: number;
     let cx: number;
     let cy: number;
+    let sx: number;
+    let sy: number;
     let L: number;
     let Lx: number;
     let Ly: number;
@@ -460,49 +595,41 @@ export function initFvclip(
     let L_adj: number;
     let darkScore: number;
     let combined: number;
-    let thresh: number;
     let placeRoll: number;
     let ch: string;
-    const edgeInfl = numInput(els.edgeInfluence, 0.42);
-
-    const exclusionOn = els.colorExclusionEnabled?.checked ?? false;
-    const onlyOn = els.colorOnlyEnabled?.checked ?? false;
 
     for (gy = 0; gy < rows; gy++) {
       for (gx = 0; gx < cols; gx++) {
         cx = gx * cell + cell * 0.5;
         cy = gy * cell + cell * 0.5;
         if (cx >= w || cy >= h) continue;
+        sx = cx * sScale;
+        sy = cy * sScale;
 
-        L = luminanceAt(data, w, h, cx, cy);
-        Lx = luminanceAt(data, w, h, cx + 1, cy) - luminanceAt(data, w, h, cx - 1, cy);
-        Ly = luminanceAt(data, w, h, cx, cy + 1) - luminanceAt(data, w, h, cx, cy - 1);
+        L = luminanceAt(data, sw, sh, sx, sy);
+        Lx = luminanceAt(data, sw, sh, sx + 1, sy) - luminanceAt(data, sw, sh, sx - 1, sy);
+        Ly = luminanceAt(data, sw, sh, sx, sy + 1) - luminanceAt(data, sw, sh, sx, sy - 1);
         edge = Math.sqrt(Lx * Lx + Ly * Ly) / 255;
 
-        L_adj = overlayToneAdjust(L);
+        L_adj = overlayToneAdjust(L, contrast, brightness);
 
         darkScore = 1 - L / 255;
         combined = darkScore * bInf + edge * eInf;
-        thresh = 0.1 + (1 - density) * 0.4;
         placeRoll = cellHash(gx, gy);
 
         if (combined < thresh) continue;
         if (placeRoll > density) continue;
 
-        if (exclusionOn && els.excludeColor) {
-          const exRgb = hexToRgb(els.excludeColor.value);
-          const px = rgbAt(data, w, h, cx, cy);
+        if (exclusionOn) {
+          const px = rgbAt(data, sw, sh, sx, sy);
           const dist = colorDistance(px.r, px.g, px.b, exRgb.r, exRgb.g, exRgb.b);
-          const tol = numInput(els.colorTolerance, 50);
-          const soft = numInput(els.colorSoftness, 40);
-          const allow = getColorExclusionAllow(dist, tol, soft);
+          const allow = getColorExclusionAllow(dist, exTol, exSoft);
           if (allow <= 0) continue;
           if (allow < 1 && cellHash(gx + 901, gy + 503) > allow) continue;
         }
 
-        if (onlyOn && els.onlyColor) {
-          const onlyRgb = hexToRgb(els.onlyColor.value);
-          const pxOnly = rgbAt(data, w, h, cx, cy);
+        if (onlyOn) {
+          const pxOnly = rgbAt(data, sw, sh, sx, sy);
           const distOnly = colorDistance(
             pxOnly.r,
             pxOnly.g,
@@ -511,9 +638,7 @@ export function initFvclip(
             onlyRgb.g,
             onlyRgb.b
           );
-          const tolOnly = numInput(els.onlyColorTolerance, 48);
-          const softOnly = numInput(els.onlyColorSoftness, 42);
-          const allowOnly = getColorInclusionAllow(distOnly, tolOnly, softOnly);
+          const allowOnly = getColorInclusionAllow(distOnly, onlyTol, onlySoft);
           if (allowOnly <= 0) continue;
           if (allowOnly < 1 && cellHash(gx + 337, gy + 619) > allowOnly) continue;
         }
@@ -542,13 +667,14 @@ export function initFvclip(
     context: CanvasRenderingContext2D,
     cells: typeof state.asciiCells
   ): void {
-    const theme = readTheme();
-    const FONT_STACK = readFonts();
+    const theme = getTheme();
+    const FONT_STACK = getFonts();
     const w = state.displaySize.w;
     const h = state.displaySize.h;
-    const opacity = numInput(els.overlayOpacity, 1);
-    const scale = numInput(els.charScale, 0.81);
-    const cell = parseInt(els.gridSize?.value || "14", 10);
+    const t = getTuning();
+    const opacity = t.overlayOpacity;
+    const scale = t.charScale;
+    const cell = t.gridSize;
     const fontSize = Math.max(7, cell * scale * 1.02);
 
     context.save();
@@ -690,14 +816,67 @@ export function initFvclip(
   }
 
   if (typeof ResizeObserver !== "undefined") {
-    resizeObserver = new ResizeObserver(scheduleLayoutApply);
+    resizeObserver = new ResizeObserver(() => {
+      // Styles (CSS vars, computed font stack) often shift in tandem with
+      // layout changes — re-read them on the next paint instead of every frame.
+      invalidateStyles();
+      scheduleLayoutApply();
+    });
     resizeObserver.observe(root);
   }
   window.addEventListener("resize", scheduleLayoutApply);
 
+  // Pause work entirely when the footer is offscreen. The flower pattern lives
+  // at the bottom of long pages and most users never scroll all the way down;
+  // running the sampling pipeline that whole time is wasted CPU.
+  let visibilityObserver: IntersectionObserver | null = null;
+  function applyVisibility(visible: boolean): void {
+    const wasOffscreen = offscreen;
+    offscreen = !visible;
+    if (offscreen && !wasOffscreen) {
+      stopVideoPreviewLoop();
+      try {
+        els.srcVideo.pause();
+      } catch {
+        /* play() may not have resolved yet */
+      }
+    } else if (!offscreen && wasOffscreen) {
+      if (!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
+        ensureVideoSilent(els.srcVideo);
+        const p = els.srcVideo.play();
+        if (p && typeof p.then === "function") p.catch(() => {});
+      }
+      startVideoPreviewLoop();
+    }
+  }
+  if (typeof IntersectionObserver !== "undefined") {
+    visibilityObserver = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          applyVisibility(entry.isIntersecting);
+        }
+      },
+      // 200 px buffer so the warmup happens just before the user scrolls in.
+      { rootMargin: "200px 0px", threshold: 0 }
+    );
+    visibilityObserver.observe(root);
+  }
+
+  // Web font may resolve after init — re-render so glyphs snap to the
+  // intended Inter typeface instead of the system fallback.
+  if (typeof document !== "undefined" && document.fonts?.ready) {
+    document.fonts.ready.then(() => {
+      if (destroyed) return;
+      invalidateStyles();
+      renderCanvas();
+    });
+  }
+
   layoutTargetW = readLayoutTargetWidth();
   state.displaySize.w = Math.max(320, layoutTargetW);
   state.displaySize.h = Math.round((state.displaySize.w * 9) / 16);
+  state.sampleSize.w = Math.min(state.displaySize.w, MAX_SAMPLE_WIDTH);
+  state.sampleSize.h = Math.round((state.sampleSize.w * 9) / 16);
 
   if (defaultVideoSrc) loadVideo(defaultVideoSrc);
   else renderCanvas();
@@ -739,6 +918,10 @@ export function initFvclip(
       if (resizeObserver) {
         resizeObserver.disconnect();
         resizeObserver = null;
+      }
+      if (visibilityObserver) {
+        visibilityObserver.disconnect();
+        visibilityObserver = null;
       }
       if (mqReduce?.removeEventListener) {
         mqReduce.removeEventListener("change", onReduceMotion);

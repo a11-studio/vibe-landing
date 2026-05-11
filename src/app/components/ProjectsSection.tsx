@@ -8,6 +8,7 @@ import imgRealitiez from "figma:asset/e456a14899251227c4ec37785838c3ea552f7971.p
 import imgAccuWeather from "figma:asset/ccbe4b5cf5687edf1efe0a848055c6d13b9a393f.png";
 import imgSpotify from "figma:asset/5befbd932cd55a328c20d0b015fe5afc87e4ad6f.png";
 import { LayoutContainer, LayoutGrid } from "@/app/components/layout";
+import { cn } from "@/app/components/ui/utils";
 import { useInView } from "@/app/hooks/useInView";
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
@@ -31,6 +32,8 @@ type ProjectEntry = {
   imageAspect?: string;
   /** Pevná výška obrázka (px) — zarovnanie v jednom riadku. */
   imageHeightPx?: number;
+  /** Pri `object-cover` uprednostni ľavý horný roh (orezávanie inak než center). */
+  focusTopLeft?: boolean;
 };
 
 const PROJECTS: ProjectEntry[] = [
@@ -55,6 +58,7 @@ const PROJECTS: ProjectEntry[] = [
     tags: ["UX/UI Design", "Animation"],
     image: imgAccuWeather,
     imageHeightPx: MEDIUM_ROW_IMAGE_PX,
+    focusTopLeft: true,
   },
   {
     name: "SelfCheck",
@@ -239,6 +243,7 @@ function ProjectCard({
   const aspectDefault = size === "large" ? "1064 / 576" : "600 / 325";
   const aspect = project.imageAspect ?? aspectDefault;
   const fixedH = project.imageHeightPx;
+  const objectPositionClass = project.focusTopLeft ? "object-left-top" : "";
 
   return (
     <article className="flex w-full min-w-0 flex-col gap-6 md:gap-8">
@@ -247,7 +252,10 @@ function ProjectCard({
           <img
             src={project.image}
             alt=""
-            className="block h-auto w-full object-cover md:h-[var(--project-fixed-img-h)] md:max-h-[var(--project-fixed-img-h)] md:aspect-auto"
+            className={cn(
+              "block h-auto w-full object-cover md:h-[var(--project-fixed-img-h)] md:max-h-[var(--project-fixed-img-h)] md:aspect-auto",
+              objectPositionClass,
+            )}
             style={
               {
                 aspectRatio: aspect,
@@ -259,7 +267,7 @@ function ProjectCard({
           <img
             src={project.image}
             alt=""
-            className="block h-auto w-full object-cover"
+            className={cn("block h-auto w-full object-cover", objectPositionClass)}
             style={{ aspectRatio: aspect }}
           />
         )}

@@ -39,3 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# optimize:flower script keeps a backup of the source video next to the optimized one
+src/assets/flower.original.mp4
+src/assets/.flower.tmp.mp4
