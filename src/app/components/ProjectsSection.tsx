@@ -113,7 +113,8 @@ function ProjectCardText({ project }: { project: ProjectEntry }) {
           fontWeight: 500,
           fontSize: "clamp(28px, 2.2vw, 48px)",
           color: "#ffffff",
-          letterSpacing: "-3px",
+          /* Predtým -3px — pri väčšom clamp bolo písmo príliš stlačené; em sa škáluje s veľkosťou. */
+          letterSpacing: "-0.03em",
           lineHeight: "normal",
         }}
       >

@@ -1,5 +1,5 @@
-import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
-import { useReducedMotion } from "motion/react";
+import { useEffect, useId, useLayoutEffect, useRef, useState, useCallback, type CSSProperties, type FocusEvent } from "react";
+import { motion, useReducedMotion } from "motion/react";
 import { useInView } from "@/app/hooks/useInView";
 import { cn } from "@/app/components/ui/utils";
 import { VibeLogoLottieHover, VIBE_LOGO_NAV_PX } from "@/app/components/VibeLogoLottieHover";
@@ -17,6 +17,9 @@ import { CompetitorSection } from "@/app/components/CompetitorSection";
 import { FooterSection } from "@/app/components/FooterSection";
 import { LayoutContainer } from "@/app/components/layout";
 import { RevealHeadline } from "@/app/components/RevealHeadline";
+
+/** Verejný odkaz na rezervovanie hovoru (Calendly). */
+const CALENDLY_BOOKING_URL = "https://calendly.com/martin-mroc/15min";
 
 // ─── Vibe Logo (HL menu): Lottie intro na hover; pokoj = posledný frame Lottie ─
 function VibeLogo() {
@@ -124,33 +127,135 @@ const MENU_PANEL_BOTTOM_DURATION_MS = 560;
 /** Jemnejší „výdych“ na konci kroku — pôsobi menej plocho ako lineárny ease */
 const MENU_PANEL_EASE = "cubic-bezier(0.19, 1, 0.22, 1)";
 
-/** Figma 626:2 — pill hover: bg rgba(227,234,239,0.6), text rgba(0,0,0,0.7), radius 50px */
+/** Figma 626:2 — jeden posúvajúci sa pill na pozadí desktop nav */
 
-const navLinkPillDesktopClass = cn(
-  "inline-flex items-center justify-center rounded-[50px] text-[15px] font-medium whitespace-nowrap",
-  "text-black transition-[background-color,color] duration-200 ease-out",
-  "motion-reduce:hover:bg-transparent motion-reduce:hover:text-black",
-);
+const NAV_PILL_BG = "rgba(227,234,239,0.6)";
 
-function HeroDesktopNavLink({
-  item,
-  onNavigate,
+function HeroDesktopNav({
+  reducedMotion,
+  menuOpen,
+  onMenuOpenChange,
 }: {
-  item: (typeof MOBILE_NAV)[number];
-  onNavigate: () => void;
+  reducedMotion: boolean;
+  menuOpen: boolean;
+  onMenuOpenChange: (open: boolean) => void;
 }) {
+  const trackRef = useRef<HTMLDivElement>(null);
+  const linkRefs = useRef<(HTMLAnchorElement | null)[]>([]);
+  const hoverIdxRef = useRef<number | null>(null);
+  const [hoverIdx, setHoverIdx] = useState<number | null>(null);
+  const [pill, setPill] = useState({ left: 0, top: 0, width: 0, height: 0 });
+
+  const measureAtIndex = useCallback((index: number) => {
+    const track = trackRef.current;
+    const link = linkRefs.current[index];
+    if (!track || !link) return;
+    const tr = track.getBoundingClientRect();
+    const lr = link.getBoundingClientRect();
+    setPill({
+      left: lr.left - tr.left,
+      top: lr.top - tr.top,
+      width: lr.width,
+      height: lr.height,
+    });
+  }, []);
+
+  const measureHoveredIfAny = useCallback(() => {
+    const i = hoverIdxRef.current;
+    if (i != null) measureAtIndex(i);
+  }, [measureAtIndex]);
+
+  useLayoutEffect(() => {
+    const el = trackRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => measureHoveredIfAny());
+    ro.observe(el);
+    window.addEventListener("resize", measureHoveredIfAny);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", measureHoveredIfAny);
+    };
+  }, [measureHoveredIfAny]);
+
+  const showAtIndex = useCallback(
+    (index: number) => {
+      hoverIdxRef.current = index;
+      measureAtIndex(index);
+      setHoverIdx(index);
+    },
+    [measureAtIndex],
+  );
+
+  const hidePill = useCallback(() => {
+    hoverIdxRef.current = null;
+    setHoverIdx(null);
+  }, []);
+
+  const onLinkBlur = (e: FocusEvent<HTMLAnchorElement>) => {
+    const track = trackRef.current;
+    const next = e.relatedTarget;
+    if (track && next instanceof Node && track.contains(next)) return;
+    hidePill();
+  };
+
+  const pillTransition = reducedMotion
+    ? ({
+        duration: 0.12,
+        ease: [0.33, 1, 0.68, 1] as const,
+        opacity: { duration: 0.1, ease: "easeOut" as const },
+      } as const)
+    : ({
+        type: "spring" as const,
+        stiffness: 420,
+        damping: 30,
+        mass: 0.78,
+        opacity: { duration: 0.18, ease: "easeOut" as const },
+      } as const);
+
   return (
-    <a
-      href={item.href}
-      className={cn(
-        navLinkPillDesktopClass,
-        "px-4 py-2",
-        "hover:bg-[rgba(227,234,239,0.6)] hover:text-[rgba(0,0,0,0.7)]",
-      )}
-      onClick={onNavigate}
+    <div
+      ref={trackRef}
+      className="relative hidden min-h-0 min-w-0 flex-1 items-center sm:flex sm:justify-between"
+      onMouseLeave={hidePill}
     >
-      {item.label}
-    </a>
+      <motion.div
+        aria-hidden
+        className="pointer-events-none absolute left-0 top-0 z-[1] rounded-[50px]"
+        style={{ backgroundColor: NAV_PILL_BG }}
+        initial={false}
+        animate={{
+          x: pill.left,
+          y: pill.top,
+          width: Math.max(pill.width, 0),
+          height: Math.max(pill.height, 0),
+          opacity: hoverIdx != null && pill.width > 0 ? 1 : 0,
+        }}
+        transition={pillTransition}
+      />
+      {MOBILE_NAV.map((item, index) => (
+        <a
+          key={item.href}
+          ref={(el) => {
+            linkRefs.current[index] = el;
+          }}
+          href={item.href}
+          onMouseEnter={() => showAtIndex(index)}
+          onFocus={() => showAtIndex(index)}
+          onBlur={onLinkBlur}
+          className={cn(
+            "relative z-[2] inline-flex items-center justify-center rounded-[50px] px-4 py-2 text-[15px] font-medium whitespace-nowrap text-black outline-none select-none",
+            "transition-colors duration-200 ease-out motion-reduce:transition-none",
+            hoverIdx === index && "text-[rgba(0,0,0,0.7)]",
+            "focus-visible:text-[rgba(0,0,0,0.7)] motion-reduce:focus-visible:text-black",
+          )}
+          onClick={() => {
+            if (menuOpen) onMenuOpenChange(false);
+          }}
+        >
+          {item.label}
+        </a>
+      ))}
+    </div>
   );
 }
 
@@ -282,7 +387,9 @@ function NavMenuPanel({
         </a>
 
         <a
-          href="mailto:vibestudio@design?subject=Schedule%20a%20call"
+          href={CALENDLY_BOOKING_URL}
+          target="_blank"
+          rel="noopener noreferrer"
           className={cn(
             "nav-menu-panel__cta mt-8 inline-flex items-center justify-center rounded-[40px] bg-[#040404] px-6 py-3 text-[16px] font-medium leading-none text-white tracking-[-0.54px] sm:mt-10 sm:text-[18px]",
             "hover:opacity-90 motion-reduce:hover:opacity-100",
@@ -313,6 +420,7 @@ function Navbar({
 }) {
   const closeRef = useRef<HTMLButtonElement>(null);
   const navRef = useRef<HTMLElement>(null);
+  const reducedMotion = useReducedMotion();
   const [navWidthPx, setNavWidthPx] = useState<number | null>(null);
   const [isSmDown, setIsSmDown] = useState(
     () =>
@@ -411,7 +519,7 @@ function Navbar({
         <LayoutContainer className="flex w-full max-w-full flex-col items-center">
           <nav
             ref={navRef}
-            className="inline-flex max-w-full items-center gap-4 px-4 rounded-[70px] transition-all duration-500 sm:w-[min(420px,calc(100vw-32px))] sm:gap-4 sm:px-5"
+            className="isolate inline-flex max-w-full items-center gap-4 px-4 rounded-[70px] transition-all duration-500 sm:w-[min(420px,calc(100vw-32px))] sm:gap-4 sm:px-5"
             style={{
               minHeight: 54,
               backgroundColor: scrolled ? "rgba(255,255,255,0.92)" : "rgba(255,255,255,1)",
@@ -434,17 +542,11 @@ function Navbar({
               <VibeLogo />
             </a>
 
-            <div className="hidden min-w-0 flex-1 sm:flex sm:items-center sm:justify-between">
-              {MOBILE_NAV.map((item) => (
-                <HeroDesktopNavLink
-                  key={item.href}
-                  item={item}
-                  onNavigate={() => {
-                    if (menuOpen) onMenuOpenChange(false);
-                  }}
-                />
-              ))}
-            </div>
+            <HeroDesktopNav
+              reducedMotion={!!reducedMotion}
+              menuOpen={menuOpen}
+              onMenuOpenChange={onMenuOpenChange}
+            />
 
             <button
               ref={closeRef}
@@ -507,9 +609,11 @@ function ScheduleCTA({ scrolled }: { scrolled: boolean }) {
         pointerEvents: scrolled ? "none" : "auto",
       }}
     >
-      <button
-        type="button"
-        className="group flex cursor-pointer items-center gap-4 rounded-[62px]"
+      <a
+        href={CALENDLY_BOOKING_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="group flex cursor-pointer items-center gap-4 rounded-[62px] no-underline"
         style={{
           backgroundColor: "white",
           padding: "6px 22px 6px 8px",
@@ -550,7 +654,7 @@ function ScheduleCTA({ scrolled }: { scrolled: boolean }) {
             </svg>
           </div>
         </div>
-      </button>
+      </a>
     </div>
   );
 }
