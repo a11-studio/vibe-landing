@@ -57,10 +57,10 @@ function ApproachCard({
         style={{ borderRadius: 4, aspectRatio: "488 / 396" }}
       >
         {reducedMotion || !magnetDesktop ? (
-          <img src={image} alt={title} className="h-full w-full object-contain" />
+          <img src={image} alt={title} className="h-full w-full object-contain" loading="lazy" />
         ) : (
           <Suspense
-            fallback={<img src={image} alt={title} className="h-full w-full object-contain" />}
+            fallback={<img src={image} alt={title} className="h-full w-full object-contain" loading="lazy" />}
           >
             <ApproachWebGLImage
               src={image}

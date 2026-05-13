@@ -6,7 +6,8 @@
   "scripts": {
     "build": "vite build",
     "dev": "vite",
-    "optimize:flower": "node scripts/optimize-flower-video.mjs"
+    "optimize:flower": "node scripts/optimize-flower-video.mjs",
+    "optimize:images": "node scripts/optimize-images.mjs"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "1.2.3",
@@ -63,6 +64,7 @@
     "@types/react": "18.3.20",
     "@types/react-dom": "18.3.5",
     "@vitejs/plugin-react": "4.7.0",
+    "sharp": "^0.34.5",
     "tailwindcss": "4.1.12",
     "typescript": "5.8.3",
     "vite": "^6.4.2"

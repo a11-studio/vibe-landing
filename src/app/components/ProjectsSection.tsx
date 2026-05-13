@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import type { CSSProperties } from "react";
-import imgBanner from "@/assets/banner.png";
-import imgRege from "@/assets/rege.png";
-import imgSelfcheckPhoto from "@/assets/selfcheck.png";
-import imgSilencio from "figma:asset/d0cc88609464830db5a519803d66b943f3a8741e.png";
-import imgRealitiez from "figma:asset/e456a14899251227c4ec37785838c3ea552f7971.png";
-import imgAccuWeather from "figma:asset/ccbe4b5cf5687edf1efe0a848055c6d13b9a393f.png";
-import imgSpotify from "figma:asset/5befbd932cd55a328c20d0b015fe5afc87e4ad6f.png";
+import imgBanner from "@/assets/banner.webp";
+import imgRege from "@/assets/rege.webp";
+import imgSelfcheckPhoto from "@/assets/selfcheck.webp";
+import imgSilencio from "@/assets/d0cc88609464830db5a519803d66b943f3a8741e.webp";
+import imgRealitiez from "@/assets/e456a14899251227c4ec37785838c3ea552f7971.webp";
+import imgAccuWeather from "@/assets/ccbe4b5cf5687edf1efe0a848055c6d13b9a393f.webp";
+import imgSpotify from "@/assets/5befbd932cd55a328c20d0b015fe5afc87e4ad6f.webp";
 import { LayoutContainer, LayoutGrid } from "@/app/components/layout";
 import { cn } from "@/app/components/ui/utils";
 import { useInView } from "@/app/hooks/useInView";
@@ -162,6 +162,7 @@ function ProjectsRow1Aligned({ left, right }: { left: ProjectEntry; right: Proje
               src={left.image}
               alt=""
               className="block aspect-[1064/576] w-full object-cover"
+              loading="lazy"
             />
           </div>
           <div className="hidden min-h-px md:col-span-1 md:block" aria-hidden />
@@ -171,6 +172,7 @@ function ProjectsRow1Aligned({ left, right }: { left: ProjectEntry; right: Proje
                 src={right.image}
                 alt=""
                 className="block aspect-[600/325] w-full object-cover"
+                loading="lazy"
               />
             </div>
           </div>
@@ -214,6 +216,7 @@ function ProjectsRow3SpotifyMetric({
               src={project.image}
               alt=""
               className="block aspect-[1064/576] w-full object-cover"
+              loading="lazy"
             />
           </div>
           <div className="hidden min-h-px md:col-span-1 md:block" aria-hidden />
@@ -264,6 +267,7 @@ function ProjectCard({
                 ["--project-fixed-img-h" as string]: `${fixedH}px`,
               } as CSSProperties
             }
+            loading="lazy"
           />
         ) : (
           <img
@@ -271,6 +275,7 @@ function ProjectCard({
             alt=""
             className={cn("block h-auto w-full object-cover", objectPositionClass)}
             style={{ aspectRatio: aspect }}
+            loading="lazy"
           />
         )}
       </div>
@@ -321,6 +326,7 @@ function ProjectsMetricCard({ backgroundImage }: { backgroundImage: string }) {
         src={backgroundImage}
         alt=""
         className="absolute inset-0 h-full w-full object-cover"
+        loading="lazy"
       />
       {/* Len spodný jemný scrim — zvyšok plochy ostáva ako svetlý source */}
       <div

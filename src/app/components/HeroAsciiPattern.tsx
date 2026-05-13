@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { mountHeroAsciiLayer } from "@/app/components/heroAsciiLayer";
 import imgHeroAsciiMobileMask from "@/assets/hero-ascii-mobile-mask.png";
-import imgWidget4 from "@/imports/widget4.png";
+import imgWidget4 from "@/imports/widget4.webp";
 import { cn } from "@/app/components/ui/utils";
 
 type HeroAsciiPatternProps = {

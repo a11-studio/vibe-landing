@@ -1,9 +1,9 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import imgImage2Mobile2 from "@/imports/MainContainer-2/d3cc047f1a595cb3f0387d0955e6730e6c665758.png";
-import imgIconImage     from "@/imports/MainContainer-2/c6085f260fd9c0ba4788039a74aabfe2a7c5edce.png";
-import imgProfileImage  from "@/imports/MainContainer-2/99e69596bfd47f32feaf8f5fa9b959e58b0a5201.png";
-import imgProfileImage1 from "@/imports/MainContainer-2/7cdfc9cdb7fbe3d70aa2bee8d0424356fd95b0d6.png";
-import imgProfileImage2 from "@/imports/MainContainer-2/99cf73b51a4c59b3d9120e0891819b22ba7a2ac9.png";
+import imgImage2Mobile2 from "@/imports/MainContainer-2/d3cc047f1a595cb3f0387d0955e6730e6c665758.webp";
+import imgIconImage     from "@/imports/MainContainer-2/c6085f260fd9c0ba4788039a74aabfe2a7c5edce.webp";
+import imgProfileImage  from "@/imports/MainContainer-2/99e69596bfd47f32feaf8f5fa9b959e58b0a5201.webp";
+import imgProfileImage1 from "@/imports/MainContainer-2/7cdfc9cdb7fbe3d70aa2bee8d0424356fd95b0d6.webp";
+import imgProfileImage2 from "@/imports/MainContainer-2/99cf73b51a4c59b3d9120e0891819b22ba7a2ac9.webp";
 import imgProfileImage3 from "@/imports/MainContainer-2/791ff24325ad83485e0f9e7f0ccd0f68b2c07f3d.png";
 import { LayoutContainer } from "@/app/components/layout";
 import { RevealHeadline } from "@/app/components/RevealHeadline";
@@ -227,11 +227,11 @@ function CardMartin() {
     <div className="relative w-full overflow-hidden" style={{ aspectRatio: "446 / 490", borderRadius: 4 }}>
       {/* base room layer */}
       <div className="absolute inset-0">
-        <img src={imgImage2Mobile2} alt="" className="w-full h-full object-cover pointer-events-none" />
+        <img src={imgImage2Mobile2} alt="" className="w-full h-full object-cover pointer-events-none" loading="lazy" />
       </div>
       {/* portrait on top */}
       <div className="absolute inset-0">
-        <img src={imgIconImage} alt="Martin Mroc" className="w-full h-full object-cover pointer-events-none" />
+        <img src={imgIconImage} alt="Martin Mroc" className="w-full h-full object-cover pointer-events-none" loading="lazy" />
       </div>
     </div>
   );
@@ -240,7 +240,7 @@ function CardMartin() {
 function CardGabriel() {
   return (
     <div className="relative w-full overflow-hidden" style={{ aspectRatio: "446 / 490", borderRadius: 4 }}>
-      <img src={imgProfileImage} alt="Gabriel Hudoba" className="w-full h-full object-cover pointer-events-none" />
+      <img src={imgProfileImage} alt="Gabriel Hudoba" className="w-full h-full object-cover pointer-events-none" loading="lazy" />
     </div>
   );
 }
@@ -248,7 +248,7 @@ function CardGabriel() {
 function CardMichal() {
   return (
     <div className="relative w-full overflow-hidden" style={{ aspectRatio: "446 / 490", borderRadius: 4 }}>
-      <img src={imgProfileImage1} alt="Michal Prekop" className="w-full h-full object-cover pointer-events-none" />
+      <img src={imgProfileImage1} alt="Michal Prekop" className="w-full h-full object-cover pointer-events-none" loading="lazy" />
     </div>
   );
 }
@@ -267,6 +267,7 @@ function CardMichaela() {
           alt="Michaela Fias"
           className="absolute h-full pointer-events-none"
           style={{ width: "auto", right: 0, top: 0, objectFit: "cover" }}
+          loading="lazy"
         />
       </div>
     </div>
@@ -276,7 +277,7 @@ function CardMichaela() {
 function CardPatrik() {
   return (
     <div className="relative w-full overflow-hidden" style={{ aspectRatio: "446 / 490", borderRadius: 4 }}>
-      <img src={imgProfileImage3} alt="Patrik Smejkal" className="w-full h-full object-cover pointer-events-none" />
+      <img src={imgProfileImage3} alt="Patrik Smejkal" className="w-full h-full object-cover pointer-events-none" loading="lazy" />
     </div>
   );
 }

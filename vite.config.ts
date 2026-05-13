@@ -60,5 +60,34 @@ export default defineConfig(({ mode }) => {
 
   // File types to support raw imports. Never add .css, .tsx, or .ts files to this.
   assetsInclude: ['**/*.svg', '**/*.csv'],
+
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          // Three.js ecosystem — large 3D library, cache separately
+          if (id.includes('node_modules/three') || id.includes('@react-three/fiber') || id.includes('@react-three/drei')) {
+            return 'vendor-three'
+          }
+          // Lottie — animation runtime, cache separately
+          if (id.includes('node_modules/lottie')) {
+            return 'vendor-lottie'
+          }
+          // Motion / Framer — animation library
+          if (id.includes('node_modules/motion') || id.includes('node_modules/framer-motion')) {
+            return 'vendor-motion'
+          }
+          // React core
+          if (id.includes('node_modules/react') || id.includes('node_modules/react-dom') || id.includes('node_modules/scheduler')) {
+            return 'vendor-react'
+          }
+          // Radix UI primitives
+          if (id.includes('node_modules/@radix-ui')) {
+            return 'vendor-radix'
+          }
+        },
+      },
+    },
+  },
   }
 })
