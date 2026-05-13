@@ -304,9 +304,24 @@ export function AboutSection() {
           </p>
         </div>
 
+        {/* Desktop: obe vety */}
         <RevealHeadline
-          wrapperClassName="team-section-headline"
+          wrapperClassName="team-section-headline hidden md:block"
           lines={["Team is assembled from this bench", "senior people from companies that ship."]}
+          style={{
+            fontWeight: 500,
+            fontSize: "clamp(28px, 2.5vw, 48px)",
+            color: "#013439",
+            letterSpacing: "-0.063em",
+            lineHeight: "normal",
+            margin: 0,
+            marginBottom: "clamp(48px, 7vw, 134px)",
+          }}
+        />
+        {/* Mobile: len druhá veta */}
+        <RevealHeadline
+          wrapperClassName="team-section-headline md:hidden"
+          lines={["Senior people from companies that ship."]}
           style={{
             fontWeight: 500,
             fontSize: "clamp(28px, 2.5vw, 48px)",
