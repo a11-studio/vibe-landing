@@ -1,5 +1,4 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import imgImage2Mobile2 from "@/imports/MainContainer-2/d3cc047f1a595cb3f0387d0955e6730e6c665758.webp";
 import imgIconImage     from "@/imports/MainContainer-2/c6085f260fd9c0ba4788039a74aabfe2a7c5edce.webp";
 import imgProfileImage  from "@/imports/MainContainer-2/99e69596bfd47f32feaf8f5fa9b959e58b0a5201.webp";
 import imgProfileImage1 from "@/imports/MainContainer-2/7cdfc9cdb7fbe3d70aa2bee8d0424356fd95b0d6.webp";
@@ -225,14 +224,7 @@ function TeamStatCell({
 function CardMartin() {
   return (
     <div className="relative w-full overflow-hidden" style={{ aspectRatio: "446 / 490", borderRadius: 4 }}>
-      {/* base room layer */}
-      <div className="absolute inset-0">
-        <img src={imgImage2Mobile2} alt="" className="w-full h-full object-cover pointer-events-none" loading="lazy" />
-      </div>
-      {/* portrait on top */}
-      <div className="absolute inset-0">
-        <img src={imgIconImage} alt="Martin Mroc" className="w-full h-full object-cover pointer-events-none" loading="lazy" />
-      </div>
+      <img src={imgIconImage} alt="Martin Mroc" className="w-full h-full object-cover pointer-events-none" loading="lazy" />
     </div>
   );
 }
