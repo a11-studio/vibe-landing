@@ -17,19 +17,34 @@ export function FooterFlowerFvclip({
 }) {
   const rootRef = useRef<HTMLDivElement>(null);
 
+  // Detect touch/mobile once — stable across the component's lifetime.
+  const isTouchDevice = window.matchMedia("(pointer: coarse)").matches;
+
   useEffect(() => {
     const root = rootRef.current;
     if (!root) return;
-    const api = initFvclip(root, { videoSrc: flowerMp4, loop: true, pingPong: true });
+    // On touch/mobile devices ping-pong scrubs `currentTime` in every rAF
+    // tick — Safari mobile can't decode frames fast enough, causing freeze and
+    // stutter. Use native loop there; ping-pong stays on desktop.
+    const api = initFvclip(root, {
+      videoSrc: flowerMp4,
+      loop: true,
+      pingPong: !isTouchDevice,
+    });
     return () => api?.destroy();
-  }, []);
+  }, [isTouchDevice]);
+
+  // On high-DPR mobile screens (iPhone DPR 3) a cap of 2 makes each glyph
+  // render at 2/3 native pixel density → blurry dots. Raise cap to 3 on touch
+  // devices; keep 2 on desktop where it's already sharp and saves GPU memory.
+  const maxDpr = isTouchDevice ? "3" : "2";
 
   return (
     <div
       ref={rootRef}
       className={cn("fvclip h-full w-full", className)}
       data-fvclip
-      data-fvclip-max-dpr="2"
+      data-fvclip-max-dpr={maxDpr}
       style={style}
     >
       <div className="fvclip__inner h-full" aria-hidden>
