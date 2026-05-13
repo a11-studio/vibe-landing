@@ -1,12 +1,14 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import imgIconImage     from "@/imports/MainContainer-2/c6085f260fd9c0ba4788039a74aabfe2a7c5edce.webp";
-import imgProfileImage  from "@/imports/MainContainer-2/99e69596bfd47f32feaf8f5fa9b959e58b0a5201.webp";
-import imgProfileImage1 from "@/imports/MainContainer-2/7cdfc9cdb7fbe3d70aa2bee8d0424356fd95b0d6.webp";
-import imgProfileImage2 from "@/imports/MainContainer-2/99cf73b51a4c59b3d9120e0891819b22ba7a2ac9.webp";
-import imgProfileImage3 from "@/imports/MainContainer-2/791ff24325ad83485e0f9e7f0ccd0f68b2c07f3d.png";
+import imgMartin   from "@/imports/MainContainer-2/c6085f260fd9c0ba4788039a74aabfe2a7c5edce.webp";
+import imgGabriel  from "@/imports/MainContainer-2/99e69596bfd47f32feaf8f5fa9b959e58b0a5201.webp";
+import imgMichal   from "@/imports/MainContainer-2/7cdfc9cdb7fbe3d70aa2bee8d0424356fd95b0d6.webp";
+import imgMichaela from "@/imports/MainContainer-2/99cf73b51a4c59b3d9120e0891819b22ba7a2ac9.webp";
+import imgPatrik   from "@/imports/MainContainer-2/791ff24325ad83485e0f9e7f0ccd0f68b2c07f3d.png";
 import { LayoutContainer } from "@/app/components/layout";
 import { RevealHeadline } from "@/app/components/RevealHeadline";
 import { useInView } from "@/app/hooks/useInView";
+import { easeOutCubic } from "@/app/utils/easing";
+import { IMAGE_RADIUS, EASE_OUT_EXPO_CSS } from "@/app/utils/tokens";
 
 const STAT_COUNT_MS = 1500;
 /** Kreslenie vertikálnej čiary po vstupe bannera do viewportu + pauza. */
@@ -17,10 +19,6 @@ const STAT_COUNT_INVIEW_THRESHOLD = 0.22;
 const STAT_BANNER_INVIEW_THRESHOLD = 0.58;
 /** Po tom, čo je banner „v strede záujmu“, ešte krátka pauza, aby bolo kreslenie čiary viditeľné. */
 const STAT_LINE_START_DELAY_MS = 650;
-
-function easeOutCubic(t: number): number {
-  return 1 - (1 - t) ** 3;
-}
 
 type TeamStatFormat = "millions" | "plus" | "days";
 
@@ -44,7 +42,7 @@ function TeamStatAccentLine({
           height: reveal ? "100%" : "0%",
           transition: reducedMotion
             ? "none"
-            : `height ${STAT_LINE_DRAW_MS}ms cubic-bezier(0.22, 1, 0.36, 1)`,
+            : `height ${STAT_LINE_DRAW_MS}ms ${EASE_OUT_EXPO_CSS}`,
         }}
       />
     </div>
@@ -69,7 +67,7 @@ function TeamStatMobileTopLine({
           transform: reveal ? "scaleX(1)" : "scaleX(0)",
           transition: reducedMotion
             ? "none"
-            : `transform ${STAT_LINE_DRAW_MS}ms cubic-bezier(0.22, 1, 0.36, 1)`,
+            : `transform ${STAT_LINE_DRAW_MS}ms ${EASE_OUT_EXPO_CSS}`,
         }}
       />
     </div>
@@ -217,59 +215,26 @@ function TeamStatCell({
   );
 }
 
-// ─── Individual photo cards ───────────────────────────────────────────────────
-// Each card reproduces the Figma ImageContainer at fixed 446×490 output size.
-// We wrap in an aspect-ratio div so it scales responsively.
-
-function CardMartin() {
+// ─── Shared photo card ────────────────────────────────────────────────────────
+// Reproduces the Figma 446×490 ImageContainer; scales responsively via aspect-ratio.
+// anchorRight: Michaela's source image is wider than the frame — anchor to the right
+// edge so the correct crop is visible (mirrors the Figma mask-position).
+function TeamMemberCard({ src, alt, anchorRight }: { src: string; alt: string; anchorRight?: boolean }) {
   return (
-    <div className="relative w-full overflow-hidden" style={{ aspectRatio: "446 / 490", borderRadius: 4 }}>
-      <img src={imgIconImage} alt="Martin Mroc" className="w-full h-full object-cover pointer-events-none" loading="lazy" />
-    </div>
-  );
-}
-
-function CardGabriel() {
-  return (
-    <div className="relative w-full overflow-hidden" style={{ aspectRatio: "446 / 490", borderRadius: 4 }}>
-      <img src={imgProfileImage} alt="Gabriel Hudoba" className="w-full h-full object-cover pointer-events-none" loading="lazy" />
-    </div>
-  );
-}
-
-function CardMichal() {
-  return (
-    <div className="relative w-full overflow-hidden" style={{ aspectRatio: "446 / 490", borderRadius: 4 }}>
-      <img src={imgProfileImage1} alt="Michal Prekop" className="w-full h-full object-cover pointer-events-none" loading="lazy" />
-    </div>
-  );
-}
-
-function CardMichaela() {
-  return (
-    <div className="relative w-full overflow-hidden" style={{ aspectRatio: "446 / 490", borderRadius: 4 }}>
-      {/*
-       * Michaela's layer in Figma is 1046px wide with mask-position [301px, 18px]:
-       * the visible window starts at x=301 of the 1046px-wide image.
-       * We reproduce this by anchoring to the right so the correct portion shows.
-       */}
-      <div className="absolute inset-0 overflow-hidden">
-        <img
-          src={imgProfileImage2}
-          alt="Michaela Fias"
-          className="absolute h-full pointer-events-none"
-          style={{ width: "auto", right: 0, top: 0, objectFit: "cover" }}
-          loading="lazy"
-        />
-      </div>
-    </div>
-  );
-}
-
-function CardPatrik() {
-  return (
-    <div className="relative w-full overflow-hidden" style={{ aspectRatio: "446 / 490", borderRadius: 4 }}>
-      <img src={imgProfileImage3} alt="Patrik Smejkal" className="w-full h-full object-cover pointer-events-none" loading="lazy" />
+    <div className="relative w-full overflow-hidden" style={{ aspectRatio: "446 / 490", borderRadius: IMAGE_RADIUS }}>
+      {anchorRight ? (
+        <div className="absolute inset-0 overflow-hidden">
+          <img
+            src={src}
+            alt={alt}
+            className="absolute h-full pointer-events-none"
+            style={{ width: "auto", right: 0, top: 0, objectFit: "cover" }}
+            loading="lazy"
+          />
+        </div>
+      ) : (
+        <img src={src} alt={alt} className="w-full h-full object-cover pointer-events-none" loading="lazy" />
+      )}
     </div>
   );
 }
@@ -378,20 +343,20 @@ export function AboutSection() {
             />
           </div>
           <div className="h-full min-h-0" style={{ gridColumn: 2, gridRow: 1 }}>
-            <CardMartin />
+            <TeamMemberCard src={imgMartin} alt="Martin Mroc" />
             <Label name="Martin Mroc" role="CEO & UX/UI Designer" />
           </div>
           <div className="h-full min-h-0" style={{ gridColumn: 3, gridRow: 1 }}>
-            <CardGabriel />
+            <TeamMemberCard src={imgGabriel} alt="Gabriel Hudoba" />
             <Label name="Gabriel Hudoba" role="Consultant & UX/UI Designer" />
           </div>
 
           <div className="h-full min-h-0" style={{ gridColumn: 1, gridRow: 2 }}>
-            <CardMichal />
+            <TeamMemberCard src={imgMichal} alt="Michal Prekop" />
             <Label name="Michal Prekop" role="3D Artist" />
           </div>
           <div className="h-full min-h-0" style={{ gridColumn: 2, gridRow: 2 }}>
-            <CardMichaela />
+            <TeamMemberCard src={imgMichaela} alt="Michaela Fias" anchorRight />
             <Label name="Michaela Fias" role="Brand Designer" />
           </div>
           <div className="h-full min-h-0" style={{ gridColumn: 3, gridRow: 2 }}>
@@ -414,7 +379,7 @@ export function AboutSection() {
             />
           </div>
           <div className="h-full min-h-0" style={{ gridColumn: 2, gridRow: 3 }}>
-            <CardPatrik />
+            <TeamMemberCard src={imgPatrik} alt="Patrik Smejkal" />
             <Label name="Patrik Smejkal" role="Product Manager" />
           </div>
           <div className="h-full min-h-0" style={{ gridColumn: 3, gridRow: 3 }} aria-hidden />
@@ -431,23 +396,23 @@ export function AboutSection() {
           />
           <div className="grid grid-cols-2 gap-x-[clamp(8px,2.5vw,20px)] gap-y-10">
             <div className="min-w-0">
-              <CardMartin />
+              <TeamMemberCard src={imgMartin} alt="Martin Mroc" />
               <Label name="Martin Mroc" role="CEO & UX/UI Designer" compact />
             </div>
             <div className="min-w-0">
-              <CardGabriel />
+              <TeamMemberCard src={imgGabriel} alt="Gabriel Hudoba" />
               <Label name="Gabriel Hudoba" role="Consultant & UX/UI Designer" compact />
             </div>
             <div className="min-w-0">
-              <CardMichal />
+              <TeamMemberCard src={imgMichal} alt="Michal Prekop" />
               <Label name="Michal Prekop" role="3D Artist" compact />
             </div>
             <div className="min-w-0">
-              <CardMichaela />
+              <TeamMemberCard src={imgMichaela} alt="Michaela Fias" anchorRight />
               <Label name="Michaela Fias" role="Brand Designer" compact />
             </div>
             <div className="min-w-0">
-              <CardPatrik />
+              <TeamMemberCard src={imgPatrik} alt="Patrik Smejkal" />
               <Label name="Patrik Smejkal" role="Product Manager" compact />
             </div>
           </div>

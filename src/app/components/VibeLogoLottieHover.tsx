@@ -8,9 +8,14 @@ export const VIBE_LOGO_NAV_PX = { w: 68, h: 32 } as const;
 /** Logo vo footri (mierne väčšie ako v nav). */
 export const VIBE_LOGO_FOOTER_PX = { w: 84, h: 40 } as const;
 
-function restFrameFromAnimation(animationData: unknown) {
-  const op = Number((animationData as { op?: number }).op);
-  return Math.max(0, Math.floor(op) - 1);
+/** Minimálny shape Lottie JSON potrebný na výpočet posledného frame. */
+interface LottieAnimationData {
+  op?: number;
+  [key: string]: unknown;
+}
+
+function restFrameFromAnimation(animationData: LottieAnimationData) {
+  return Math.max(0, Math.floor(Number(animationData.op ?? 0)) - 1);
 }
 
 function holdRestFrame(
@@ -29,7 +34,7 @@ export function VibeLogoLottieHover({
   height = VIBE_LOGO_NAV_PX.h,
   staticMark,
 }: {
-  animationData: unknown;
+  animationData: LottieAnimationData;
   reducedMotion: boolean;
   width?: number;
   height?: number;
@@ -47,7 +52,7 @@ export function VibeLogoLottieHover({
 
   return (
     <div
-      className="relative flex shrink-0 items-center justify-center overflow-visible"
+      className="relative flex shrink-0 cursor-pointer items-center justify-center overflow-visible"
       style={{ width, height }}
       onPointerEnter={() => {
         if (!lottieSized) return;

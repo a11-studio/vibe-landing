@@ -5,6 +5,7 @@ import { RevealHeadline } from "@/app/components/RevealHeadline";
 import imgSenior from "@/assets/image-1.svg?url";
 import imgFlexible from "@/assets/image-2.svg?url";
 import imgPrototype from "@/assets/image-3.svg?url";
+import { IMAGE_RADIUS } from "@/app/utils/tokens";
 
 const ApproachWebGLImage = lazy(() =>
   import("@/app/components/ApproachWebGLImage").then((m) => ({
@@ -54,7 +55,7 @@ function ApproachCard({
     <div className="flex w-full min-w-0 flex-col gap-12 md:gap-14">
       <div
         className="flex w-full items-center justify-center overflow-hidden"
-        style={{ borderRadius: 4, aspectRatio: "488 / 396" }}
+        style={{ borderRadius: IMAGE_RADIUS, aspectRatio: "488 / 396" }}
       >
         {reducedMotion || !magnetDesktop ? (
           <img src={image} alt={title} className="h-full w-full object-contain" loading="lazy" />

@@ -15,10 +15,17 @@ import { VibeLogoLottieHover, VIBE_LOGO_FOOTER_PX } from "@/app/components/VibeL
 import vibeLogoIntroWhiteAnimation from "@/assets/lottie/Vibe_logo_anim_V1_intro_white.json";
 import svgPaths from "@/imports/Footer/svg-39tshfia8v";
 
-/** Figma footer — farba pozadia. */
-const FIGMA = {
-  bg: "var(--logos-canvas)",
-} as const;
+const FOOTER_BG = "var(--logos-canvas)";
+
+/** Spoločný štýl odkazov v spodnej časti footer stĺpca. */
+const footerContactLinkStyle: CSSProperties = {
+  fontWeight: 400,
+  fontSize: "clamp(16px, 1.1vw, 20px)",
+  color: "rgba(255,255,255,0.5)",
+  letterSpacing: "-0.6px",
+  lineHeight: "normal",
+  textDecoration: "none",
+};
 
 const FOOTER_UNDERLINE_MS = 520;
 const FOOTER_UNDERLINE_EASE = "cubic-bezier(0.16, 1, 0.3, 1)";
@@ -130,6 +137,7 @@ const FooterUnderlineLink = forwardRef(function FooterUnderlineLink(
     </a>
   );
 });
+FooterUnderlineLink.displayName = "FooterUnderlineLink";
 
 // ─── Live Prague time ─────────────────────────────────────────────────────────
 function usePragueTime() {
@@ -154,8 +162,8 @@ function usePragueTime() {
   return time;
 }
 
-// ─── Arrow (Figma: arrow-top-left, ↗) ─────────────────────────────────────────
-function ArrowRight() {
+// ─── Arrow ↗ (Figma: arrow-top-left) ─────────────────────────────────────────
+function ArrowTopLeft() {
   return (
     <div style={{ width: 50.912, height: 50.912, position: "relative", flexShrink: 0 }}>
       <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -210,14 +218,7 @@ function FooterComingSoonLink({
         <FooterUnderlineLink
           href={href}
           reducedMotion={reducedMotion}
-          style={{
-            fontWeight: 400,
-            fontSize: "clamp(16px, 1.1vw, 20px)",
-            color: "white",
-            letterSpacing: "-0.6px",
-            lineHeight: "normal",
-            textDecoration: "none",
-          }}
+          style={{ ...footerContactLinkStyle, color: "white" }}
           className="shrink-0 cursor-pointer text-left outline-none sm:whitespace-nowrap"
           onClick={(e) => {
             e.preventDefault();
@@ -324,7 +325,7 @@ export function FooterSection() {
             }}
           />
           <span className="shrink-0 transition-transform duration-300 group-hover:translate-x-2">
-            <ArrowRight />
+            <ArrowTopLeft />
           </span>
         </span>
         <span
@@ -386,14 +387,7 @@ export function FooterSection() {
           href="mailto:hello@vibestudio.design"
           reducedMotion={reducedMotion}
           className="whitespace-nowrap"
-          style={{
-            fontWeight: 400,
-            fontSize: "clamp(16px, 1.1vw, 20px)",
-            color: "rgba(255,255,255,0.5)",
-            letterSpacing: "-0.6px",
-            lineHeight: "normal",
-            textDecoration: "none",
-          }}
+          style={footerContactLinkStyle}
         >
           hello@vibestudio.design
         </FooterUnderlineLink>
@@ -401,14 +395,7 @@ export function FooterSection() {
           href="tel:+421911014410"
           reducedMotion={reducedMotion}
           className="whitespace-nowrap"
-          style={{
-            fontWeight: 400,
-            fontSize: "clamp(16px, 1.1vw, 20px)",
-            color: "rgba(255,255,255,0.5)",
-            letterSpacing: "-0.6px",
-            lineHeight: "normal",
-            textDecoration: "none",
-          }}
+          style={footerContactLinkStyle}
         >
           +421 911 014 410
         </FooterUnderlineLink>
@@ -419,7 +406,7 @@ export function FooterSection() {
   return (
     <footer
       className="relative flex min-h-svh w-full flex-col overflow-x-clip"
-      style={{ backgroundColor: FIGMA.bg }}
+      style={{ backgroundColor: FOOTER_BG }}
     >
       {isNarrow ? (
         <>

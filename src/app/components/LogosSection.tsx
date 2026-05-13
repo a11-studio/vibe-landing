@@ -7,13 +7,16 @@ import { useInView } from "@/app/hooks/useInView";
 // Each logo is a plain inline SVG with viewBox + responsive height via CSS.
 // height is controlled by the parent cell — logo SVGs use height="100%" width="auto".
 
+const LOGO_STYLE_32: CSSProperties = { height: 32, width: "auto", display: "block" };
+const LOGO_STYLE_40: CSSProperties = { height: 40, width: "auto", display: "block" };
+
 // ─── eWorld ──────────────────────────────────────────────────────────────────
 function LogoWorld() {
   return (
     <svg
       viewBox="0 0 128 32"
       fill="none"
-      style={{ height: 32, width: "auto", display: "block" }}
+      style={LOGO_STYLE_32}
     >
       <path d={svgPaths.p134ed00} fill="currentColor" />
       <path d={svgPaths.p1da62e00} fill="currentColor" />
@@ -31,7 +34,7 @@ function LogoRealio() {
     <svg
       viewBox="0 0 109.72 31.53"
       fill="none"
-      style={{ height: 32, width: "auto", display: "block" }}
+      style={LOGO_STYLE_32}
     >
       <path d={svgPaths.p189c5800} fill="currentColor" />
       <path clipRule="evenodd" d={svgPaths.p2b3f9f80} fill="currentColor" fillRule="evenodd" />
@@ -46,7 +49,7 @@ function LogoSilencio() {
     <svg
       viewBox="0 0 137.333 32"
       fill="none"
-      style={{ height: 32, width: "auto", display: "block" }}
+      style={LOGO_STYLE_32}
     >
       <path d={svgPaths.p1e05bc00} fill="currentColor" />
       <path d={svgPaths.p19cea7f2} fill="currentColor" />
@@ -69,7 +72,7 @@ function LogoWingRiders() {
     <svg
       viewBox="0 0 154 41.574"
       fill="none"
-      style={{ height: 40, width: "auto", display: "block" }}
+      style={LOGO_STYLE_40}
     >
       <path d={svgPaths.p346a50f0} fill="currentColor" />
       <path d={svgPaths.p157ea800} fill="currentColor" />
@@ -92,7 +95,7 @@ function LogoCardinal() {
     <svg
       viewBox="0 0 207.473 32"
       fill="none"
-      style={{ height: 32, width: "auto", display: "block" }}
+      style={LOGO_STYLE_32}
     >
       <path clipRule="evenodd" d={svgPaths.p1346bdc0} fill="currentColor" fillRule="evenodd" />
       <path d={svgPaths.p1a98ef00} fill="currentColor" />
@@ -114,7 +117,7 @@ function LogoAudiencePlus() {
     <svg
       viewBox="0 0 228.533 32"
       fill="none"
-      style={{ height: 32, width: "auto", display: "block" }}
+      style={LOGO_STYLE_32}
     >
       {/* text group — original viewBox 0 0 152.188 27.5845 placed at 0,0 */}
       <svg x="0" y="2.2" width="152.189" height="27.584" viewBox="0 0 152.188 27.5845">

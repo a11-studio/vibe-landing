@@ -10,6 +10,8 @@ import imgSpotify from "@/assets/5befbd932cd55a328c20d0b015fe5afc87e4ad6f.webp";
 import { LayoutContainer, LayoutGrid } from "@/app/components/layout";
 import { cn } from "@/app/components/ui/utils";
 import { useInView } from "@/app/hooks/useInView";
+import { easeOutCubic } from "@/app/utils/easing";
+import { IMAGE_RADIUS } from "@/app/utils/tokens";
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 /** Výška média v druhom riadku (AccuWeather · SelfCheck · Rege) — Figma cca 325px. */
@@ -18,10 +20,6 @@ const MEDIUM_ROW_IMAGE_PX = 325;
 const METRIC_COUNT_START = 10;
 const METRIC_COUNT_END = 25;
 const METRIC_COUNT_MS = 1500;
-
-function easeOutCubic(t: number): number {
-  return 1 - (1 - t) ** 3;
-}
 
 type ProjectEntry = {
   name: string;
@@ -156,7 +154,7 @@ function ProjectsRow1Aligned({ left, right }: { left: ProjectEntry; right: Proje
         <div className="grid w-full grid-cols-12 gap-x-5">
           <div
             className="col-span-12 w-full overflow-hidden md:col-span-7 md:self-start"
-            style={{ borderRadius: 4 }}
+            style={{ borderRadius: IMAGE_RADIUS }}
           >
             <img
               src={left.image}
@@ -167,7 +165,7 @@ function ProjectsRow1Aligned({ left, right }: { left: ProjectEntry; right: Proje
           </div>
           <div className="hidden min-h-px md:col-span-1 md:block" aria-hidden />
           <div className="col-span-12 w-full md:col-span-4 md:self-end">
-            <div className="w-full overflow-hidden" style={{ borderRadius: 4 }}>
+            <div className="w-full overflow-hidden" style={{ borderRadius: IMAGE_RADIUS }}>
               <img
                 src={right.image}
                 alt=""
@@ -210,7 +208,7 @@ function ProjectsRow3SpotifyMetric({
         <div className="grid w-full grid-cols-12 gap-x-5">
           <div
             className="col-span-12 w-full overflow-hidden md:col-span-7 md:self-start"
-            style={{ borderRadius: 4 }}
+            style={{ borderRadius: IMAGE_RADIUS }}
           >
             <img
               src={project.image}
@@ -252,7 +250,7 @@ function ProjectCard({
 
   return (
     <article className="flex w-full min-w-0 flex-col gap-6 md:gap-8">
-      <div className="w-full overflow-hidden" style={{ borderRadius: 4 }}>
+      <div className="w-full overflow-hidden" style={{ borderRadius: IMAGE_RADIUS }}>
         {fixedH != null ? (
           <img
             src={project.image}
@@ -320,7 +318,7 @@ function ProjectsMetricCard({ backgroundImage }: { backgroundImage: string }) {
     <div
       ref={ref}
       className="relative flex w-full flex-col items-center justify-center overflow-hidden px-6 py-10 text-center"
-      style={{ borderRadius: 4, aspectRatio: "600 / 325" }}
+      style={{ borderRadius: IMAGE_RADIUS, aspectRatio: "600 / 325" }}
     >
       <img
         src={backgroundImage}
