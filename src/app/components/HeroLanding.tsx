@@ -371,7 +371,7 @@ function NavMenuPanel({
         </div>
 
         <a
-          href="mailto:vibestudio@design?subject=Hello"
+          href="mailto:hello@vibestudio.design?subject=Hello"
           className="mt-8 text-center text-[16px] font-medium leading-none text-black tracking-[-0.54px] transition-opacity duration-200 hover:opacity-50 sm:mt-10 sm:text-[18px]"
         >
           <span className="nav-menu-panel__mask">
@@ -381,7 +381,7 @@ function NavMenuPanel({
                 animationDelay: reveal ? `${MENU_PANEL_EMAIL_DELAY_MS}ms` : "0ms",
               }}
             >
-              vibestudio@design
+              hello@vibestudio.design
             </span>
           </span>
         </a>
@@ -601,11 +601,10 @@ function Navbar({
 function ScheduleCTA({ scrolled }: { scrolled: boolean }) {
   return (
     <div
-      className="fixed bottom-8 right-8 z-50"
+      className="fixed bottom-8 right-8 z-50 hidden transition-[opacity,transform] duration-300 ease-out [transform:translateX(var(--schedule-cta-scroll-x))] sm:block"
       style={{
+        ["--schedule-cta-scroll-x" as string]: scrolled ? "40px" : "0px",
         opacity: scrolled ? 0 : 1,
-        transform: scrolled ? "translateX(40px)" : "translateX(0)",
-        transition: "opacity 0.3s ease, transform 0.3s ease",
         pointerEvents: scrolled ? "none" : "auto",
       }}
     >
@@ -731,7 +730,7 @@ export function HeroLanding() {
                 loading="eager"
                 aria-hidden
               />
-              <div className="relative z-10 px-6 pt-5 pb-2 sm:px-9 sm:pt-6 sm:pb-2 md:px-12 md:pt-7 md:pb-2 lg:px-14 lg:pt-8 lg:pb-2.5">
+              <div className="relative z-10 px-0 pt-5 pb-2 sm:px-9 sm:pt-6 sm:pb-2 md:px-12 md:pt-7 md:pb-2 lg:px-14 lg:pt-8 lg:pb-2.5">
                 <RevealHeadline
                   as="h1"
                   inView={heroInView}
@@ -741,7 +740,7 @@ export function HeroLanding() {
                     fontWeight: 500,
                     fontSize: "clamp(34px, 5vw, 62px)",
                     lineHeight: 0.96,
-                    letterSpacing: "-2px",
+                    letterSpacing: "clamp(-2px, -0.34vw, -1.2px)",
                   }}
                 />
               </div>

@@ -159,7 +159,7 @@ export function LogosSection() {
       ref={sectionRef}
       id="clients"
       data-scroll-section
-      className="relative flex min-h-[484px] w-full flex-col justify-center bg-[var(--logos-canvas)] py-20 text-white md:py-24"
+      className="relative flex min-h-[400px] w-full flex-col justify-center bg-[var(--logos-canvas)] pb-10 pt-16 text-white md:min-h-[440px] md:pb-14 md:pt-24"
     >
       <LayoutContainer className="flex flex-col items-center gap-16 md:gap-[5.5rem]">
         {/* Intro — rovnaká typografia ako eyebrow „Our process“ v ProcessSection */}

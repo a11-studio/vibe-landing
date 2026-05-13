@@ -67,6 +67,7 @@ const PROJECTS: ProjectEntry[] = [
     tags: ["Interaction Design", "Prototype"],
     image: imgSelfcheckPhoto,
     imageHeightPx: MEDIUM_ROW_IMAGE_PX,
+    focusTopLeft: true,
   },
   {
     name: "Rege Riders",
@@ -400,11 +401,11 @@ export function ProjectsSection() {
           </p>
         </div>
 
-        <LayoutGrid className="gap-y-12 md:gap-y-[clamp(96px,14vw,200px)]">
+        <LayoutGrid className="gap-y-20 md:gap-y-[clamp(96px,14vw,200px)]">
           <ProjectsRow1Aligned left={p0} right={p1} />
 
-          {/* Row 2 — 4 · 1 · 3 · 1 · 3; mobile: jeden stĺpec, menšie medzery medzi kartami */}
-          <div className="col-span-12 flex flex-col gap-10 md:contents">
+          {/* Row 2 — 4 · 1 · 3 · 1 · 3; mobile: jeden stĺpec, väčšie medzery medzi kartami */}
+          <div className="col-span-12 flex flex-col gap-16 md:contents">
             <div className="col-span-12 md:col-span-4">
               <ProjectCard project={p2} size="medium" />
             </div>

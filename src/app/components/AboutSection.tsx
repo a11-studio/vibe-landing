@@ -35,7 +35,7 @@ function TeamStatAccentLine({
 }) {
   return (
     <div
-      className="pointer-events-none relative w-px shrink-0 self-stretch overflow-hidden"
+      className="pointer-events-none relative hidden w-px shrink-0 self-stretch overflow-hidden md:block"
       style={{ minHeight: 1 }}
       aria-hidden
     >
@@ -46,6 +46,31 @@ function TeamStatAccentLine({
           transition: reducedMotion
             ? "none"
             : `height ${STAT_LINE_DRAW_MS}ms cubic-bezier(0.22, 1, 0.36, 1)`,
+        }}
+      />
+    </div>
+  );
+}
+
+function TeamStatMobileTopLine({
+  reveal,
+  reducedMotion,
+}: {
+  reveal: boolean;
+  reducedMotion: boolean;
+}) {
+  return (
+    <div
+      className="pointer-events-none h-px w-full overflow-hidden md:hidden"
+      aria-hidden
+    >
+      <div
+        className="h-full w-full origin-left bg-[rgba(1,52,57,0.2)]"
+        style={{
+          transform: reveal ? "scaleX(1)" : "scaleX(0)",
+          transition: reducedMotion
+            ? "none"
+            : `transform ${STAT_LINE_DRAW_MS}ms cubic-bezier(0.22, 1, 0.36, 1)`,
         }}
       />
     </div>
@@ -149,7 +174,7 @@ function TeamStatCell({
   return (
     <div
       ref={cellRef}
-      className="flex h-full min-h-0 w-full items-stretch"
+      className="relative flex h-full min-h-0 w-full items-stretch"
       style={{ gap: "clamp(16px, 2.5vw, 40px)" }}
     >
       {accentLine === "left" ? (
@@ -181,6 +206,11 @@ function TeamStatCell({
           {label}
         </p>
       </div>
+      {accentLine ? (
+        <div className="absolute left-0 right-0 top-0 -translate-y-8 md:hidden">
+          <TeamStatMobileTopLine reveal={lineReveal} reducedMotion={reducedMotion} />
+        </div>
+      ) : null}
       {accentLine === "right" ? (
         <TeamStatAccentLine reveal={lineReveal} reducedMotion={reducedMotion} />
       ) : null}
@@ -332,7 +362,7 @@ export function AboutSection() {
 
         {/*
          * Desktop grid — Figma 621:25430:
-         *   Row 1:  [+25 M]   [Martin]   [Gabriel]
+         *   Row 1:  [+20]    [Martin]   [Gabriel]
          *   Row 2:  [Michal]  [Michaela] [+50]
          *   Row 3:  [14 days] [Patrik]   [empty]
          */}
@@ -347,10 +377,10 @@ export function AboutSection() {
         >
           <div className="h-full min-h-0" style={{ gridColumn: 1, gridRow: 1 }}>
             <TeamStatCell
-              format="millions"
+              format="plus"
               start={10}
-              end={25}
-              label="Active users in apps that we design"
+              end={20}
+              label="Senior people in network"
               accentLine="left"
             />
           </div>
@@ -400,10 +430,10 @@ export function AboutSection() {
         {/* Mobile — stats full width, then 2-col people grid (reading order ≈ Figma) */}
         <div className="flex flex-col gap-10 md:hidden">
           <TeamStatCell
-            format="millions"
+            format="plus"
             start={10}
-            end={25}
-            label="Active users in apps that we design"
+            end={20}
+            label="Senior people in network"
             accentLine="left"
           />
           <div className="grid grid-cols-2 gap-x-[clamp(8px,2.5vw,20px)] gap-y-10">

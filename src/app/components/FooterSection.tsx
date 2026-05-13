@@ -1,6 +1,13 @@
-import type { CSSProperties, ReactNode, TransitionEvent } from "react";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import type {
+  CSSProperties,
+  ForwardedRef,
+  MouseEventHandler,
+  ReactNode,
+  TransitionEvent,
+} from "react";
+import { forwardRef, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { cn } from "@/app/components/ui/utils";
+import { Popover, PopoverContent, PopoverTrigger } from "@/app/components/ui/popover";
 import { LayoutContainer, LayoutGrid } from "@/app/components/layout";
 import { FooterFlowerFvclip } from "@/app/components/FooterFlowerFvclip";
 import { RevealHeadline } from "@/app/components/RevealHeadline";
@@ -29,19 +36,24 @@ function useFooterReducedMotion() {
 }
 
 /** Podčiarknutie: nájazd zľava, výjazd doprava (šírka s ukotvením vpravo). */
-function FooterUnderlineLink({
-  href,
-  style,
-  className,
-  children,
-  reducedMotion,
-}: {
-  href: string;
-  style?: CSSProperties;
-  className?: string;
-  children: ReactNode;
-  reducedMotion: boolean;
-}) {
+const FooterUnderlineLink = forwardRef(function FooterUnderlineLink(
+  {
+    href,
+    style,
+    className,
+    children,
+    reducedMotion,
+    onClick,
+  }: {
+    href: string;
+    style?: CSSProperties;
+    className?: string;
+    children: ReactNode;
+    reducedMotion: boolean;
+    onClick?: MouseEventHandler<HTMLAnchorElement>;
+  },
+  ref: ForwardedRef<HTMLAnchorElement>,
+) {
   const [hovered, setHovered] = useState(false);
   const [anchorRight, setAnchorRight] = useState(false);
   const [linePct, setLinePct] = useState(0);
@@ -90,6 +102,7 @@ function FooterUnderlineLink({
 
   return (
     <a
+      ref={ref}
       href={href}
       style={style}
       className={cn(
@@ -100,6 +113,7 @@ function FooterUnderlineLink({
       onMouseLeave={handleLeave}
       onFocus={handleEnter}
       onBlur={handleLeave}
+      onClick={onClick}
     >
       {children}
       <span
@@ -115,7 +129,7 @@ function FooterUnderlineLink({
       />
     </a>
   );
-}
+});
 
 // ─── Live Prague time ─────────────────────────────────────────────────────────
 function usePragueTime() {
@@ -179,6 +193,56 @@ function useIsNarrowFooter(): boolean {
   return narrow;
 }
 
+function FooterComingSoonLink({
+  label,
+  href,
+  reducedMotion,
+}: {
+  label: string;
+  href: string;
+  reducedMotion: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <Popover open={open} onOpenChange={setOpen} modal={false}>
+      <PopoverTrigger asChild>
+        <FooterUnderlineLink
+          href={href}
+          reducedMotion={reducedMotion}
+          style={{
+            fontWeight: 400,
+            fontSize: "clamp(16px, 1.1vw, 20px)",
+            color: "white",
+            letterSpacing: "-0.6px",
+            lineHeight: "normal",
+            textDecoration: "none",
+          }}
+          className="shrink-0 cursor-pointer text-left outline-none sm:whitespace-nowrap"
+          onClick={(e) => {
+            e.preventDefault();
+            setOpen((prev) => !prev);
+          }}
+        >
+          {label}
+        </FooterUnderlineLink>
+      </PopoverTrigger>
+      <PopoverContent
+        side="top"
+        align="center"
+        sideOffset={10}
+        onOpenAutoFocus={(e) => e.preventDefault()}
+        className={cn(
+          "w-fit rounded-lg border px-3 py-2 shadow-lg",
+          "border-white/15 bg-[var(--logos-canvas)] text-[13px] font-medium text-white",
+        )}
+      >
+        Coming soon
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 function FooterSocialRow({ reducedMotion }: { reducedMotion: boolean }) {
   return (
     <div className="col-span-12 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
@@ -211,22 +275,12 @@ function FooterSocialRow({ reducedMotion }: { reducedMotion: boolean }) {
             { label: "Join Us", href: "#" },
           ] as const
         ).map(({ label, href }) => (
-          <FooterUnderlineLink
+          <FooterComingSoonLink
             key={label}
+            label={label}
             href={href}
             reducedMotion={reducedMotion}
-            style={{
-              fontWeight: 400,
-              fontSize: "clamp(16px, 1.1vw, 20px)",
-              color: "white",
-              letterSpacing: "-0.6px",
-              lineHeight: "normal",
-              textDecoration: "none",
-            }}
-            className="shrink-0 text-left sm:whitespace-nowrap"
-          >
-            {label}
-          </FooterUnderlineLink>
+          />
         ))}
       </nav>
     </div>
@@ -249,27 +303,41 @@ export function FooterSection() {
       }}
     >
       <a
-        href="mailto:vibestudio@design"
-        className="group inline-flex w-fit max-w-none shrink-0 items-center gap-5"
+        href="mailto:hello@vibestudio.design"
+        className="group inline-flex w-fit max-w-none shrink-0 flex-col items-start"
         style={{ textDecoration: "none" }}
       >
-        <RevealHeadline
-          as="h2"
-          lines={["Let's grow together"]}
-          animated={false}
-          className="whitespace-nowrap"
-          wrapperClassName="inline-block shrink-0"
+        <span className="inline-flex items-center gap-5">
+          <RevealHeadline
+            as="h2"
+            lines={["Let's grow together"]}
+            animated={false}
+            className="whitespace-nowrap"
+            wrapperClassName="inline-block shrink-0"
+            style={{
+              fontWeight: 500,
+              fontSize: "clamp(32px, 4.5vw, 68px)",
+              color: "white",
+              letterSpacing: "-3px",
+              lineHeight: "normal",
+              margin: 0,
+            }}
+          />
+          <span className="shrink-0 transition-transform duration-300 group-hover:translate-x-2">
+            <ArrowRight />
+          </span>
+        </span>
+        <span
+          className="mt-3 block"
           style={{
-            fontWeight: 500,
-            fontSize: "clamp(32px, 4.5vw, 68px)",
-            color: "white",
-            letterSpacing: "-3px",
+            fontWeight: 400,
+            fontSize: "clamp(20px, 1.35vw, 28px)",
+            color: "rgba(255,255,255,0.5)",
+            letterSpacing: "-0.6px",
             lineHeight: "normal",
-            margin: 0,
           }}
-        />
-        <span className="shrink-0 transition-transform duration-300 group-hover:translate-x-2">
-          <ArrowRight />
+        >
+          Start with a simple message
         </span>
       </a>
 
@@ -315,7 +383,7 @@ export function FooterSection() {
         }
       >
         <FooterUnderlineLink
-          href="mailto:vibestudio@design"
+          href="mailto:hello@vibestudio.design"
           reducedMotion={reducedMotion}
           className="whitespace-nowrap"
           style={{
@@ -327,7 +395,7 @@ export function FooterSection() {
             textDecoration: "none",
           }}
         >
-          vibestudio@design
+          hello@vibestudio.design
         </FooterUnderlineLink>
         <FooterUnderlineLink
           href="tel:+421911014410"
@@ -362,8 +430,8 @@ export function FooterSection() {
             className="pointer-events-none relative z-[1] flex min-h-[clamp(268px,40svh,620px)] max-h-[min(90svh,980px)] w-full flex-1 flex-col overflow-hidden"
             aria-hidden
           >
-            <div className="pointer-events-none mx-auto flex h-full min-h-0 w-full max-w-[min(96vw,1200px)] flex-1 items-end justify-center px-[clamp(24px,2.1vw,40px)]">
-              <div className="footer-mobile-flower-visual w-full">
+            <div className="pointer-events-none mx-auto flex h-full min-h-0 w-full flex-1 items-end justify-center overflow-visible">
+              <div className="footer-mobile-flower-visual w-[150vw] max-w-none shrink-0">
                 <FooterFlowerFvclip className="w-full" dense />
               </div>
             </div>

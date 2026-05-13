@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { mountHeroAsciiLayer } from "@/app/components/heroAsciiLayer";
+import imgHeroAsciiMobileMask from "@/assets/hero-ascii-mobile-mask.png";
 import imgWidget4 from "@/imports/widget4.png";
 import { cn } from "@/app/components/ui/utils";
 
@@ -23,6 +24,7 @@ export function HeroAsciiPattern({ className }: HeroAsciiPatternProps) {
       container,
       canvas,
       imageSrc: imgWidget4,
+      mobileImageSrc: imgHeroAsciiMobileMask,
     });
   }, []);
 

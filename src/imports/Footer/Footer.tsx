@@ -504,7 +504,7 @@ export default function Footer() {
       <Group1 />
       <p className="absolute font-['Inter:Regular',sans-serif] font-normal leading-[normal] left-[calc(50%-765px)] not-italic text-[20px] text-white top-[405px] tracking-[-0.6px] whitespace-nowrap">Prague, CZ</p>
       <Group2 />
-      <p className="absolute font-['Inter:Regular',sans-serif] font-normal leading-[normal] left-[calc(50%-765px)] not-italic text-[20px] text-[rgba(255,255,255,0.5)] top-[542px] tracking-[-0.6px] whitespace-nowrap">vibestudio@design</p>
+        <p className="absolute font-['Inter:Regular',sans-serif] font-normal leading-[normal] left-[calc(50%-765px)] not-italic text-[20px] text-[rgba(255,255,255,0.5)] top-[542px] tracking-[-0.6px] whitespace-nowrap">hello@vibestudio.design</p>
       <p className="absolute font-['Inter:Regular',sans-serif] font-normal leading-[normal] left-[calc(50%-765px)] not-italic text-[20px] text-[rgba(255,255,255,0.5)] top-[570px] tracking-[-0.6px] whitespace-nowrap">+421 911 014 410</p>
       <p className="absolute font-['Inter:Medium',sans-serif] font-medium leading-[normal] left-[calc(50%-765px)] not-italic text-[20px] text-[rgba(255,255,255,0.3)] top-[433px] tracking-[-0.6px] whitespace-nowrap">3:15 pm</p>
       <Vibe />

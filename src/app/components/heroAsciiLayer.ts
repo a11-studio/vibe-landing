@@ -58,14 +58,24 @@ function getBackingDpr() {
   return Math.min(typeof window !== "undefined" && window.devicePixelRatio ? window.devicePixelRatio : 1, 3);
 }
 
+function getAsciiObjectPositionX(w: number) {
+  // On narrow phones the cover crop hides the active wave too far to the side.
+  // Pull the sampled source toward the visual center of the mobile hero.
+  if (w < 500) return 0.68;
+  if (w < 640) return 0.6;
+  return 0.5;
+}
+
 function drawImageCover(ctx: CanvasRenderingContext2D, img: HTMLImageElement, w: number, h: number) {
   const iw = img.naturalWidth;
   const ih = img.naturalHeight;
   if (iw < 1 || ih < 1) return;
-  const scale = Math.max(w / iw, h / ih);
+  const isMobileMaskSource = ih > iw;
+  const mobileContainNudge = isMobileMaskSource ? 1 : w < 500 ? 0.76 : w < 640 ? 0.86 : 1;
+  const scale = Math.max(w / iw, h / ih) * mobileContainNudge;
   const dw = iw * scale;
   const dh = ih * scale;
-  const dx = (w - dw) / 2;
+  const dx = isMobileMaskSource ? (w - dw) / 2 : (w - dw) * getAsciiObjectPositionX(w);
   const dy = (h - dh) / 2;
   ctx.drawImage(img, dx, dy, dw, dh);
 }
@@ -149,11 +159,13 @@ export function mountHeroAsciiLayer(options: {
   container: HTMLElement;
   canvas: HTMLCanvasElement;
   imageSrc: string;
+  mobileImageSrc?: string;
 }): () => void {
   const { container, canvas } = options;
 
   let layoutDebounceTimer: ReturnType<typeof setTimeout> | null = null;
   let animRafId: number | null = null;
+  let imageRequestId = 0;
   let animRunning = false;
   let resizeObserver: ResizeObserver | null = null;
   const motionMql =
@@ -162,11 +174,13 @@ export function mountHeroAsciiLayer(options: {
 
   const state: {
     image: HTMLImageElement | null;
+    imageSrc: string | null;
     displaySize: { w: number; h: number };
     asciiCells: Array<{ cx: number; cy: number; char: string; localOpacity: number }>;
     waveTimeMs: number;
   } = {
     image: null,
+    imageSrc: null,
     displaySize: { w: 800, h: 450 },
     asciiCells: [],
     waveTimeMs: 0,
@@ -181,6 +195,10 @@ export function mountHeroAsciiLayer(options: {
 
   function prefersReducedMotion() {
     return motionMql?.matches ?? false;
+  }
+
+  function getActiveImageSrc() {
+    return options.mobileImageSrc && state.displaySize.w < 640 ? options.mobileImageSrc : options.imageSrc;
   }
 
   function syncDisplayToContainer() {
@@ -198,6 +216,7 @@ export function mountHeroAsciiLayer(options: {
     layoutDebounceTimer = setTimeout(() => {
       layoutDebounceTimer = null;
       syncDisplayToContainer();
+      ensureActiveImage();
       renderCanvas();
     }, 80);
   }
@@ -418,18 +437,28 @@ export function mountHeroAsciiLayer(options: {
     }
   }
 
+  function ensureActiveImage() {
+    const src = getActiveImageSrc();
+    if (state.imageSrc !== src) loadHeaderImage(src);
+  }
+
   function loadHeaderImage(src: string) {
+    const requestId = ++imageRequestId;
     const img = new Image();
     img.decoding = "async";
     img.onload = () => {
+      if (destroyed || requestId !== imageRequestId) return;
       state.image = img;
+      state.imageSrc = src;
       syncDisplayToContainer();
       state.waveTimeMs = prefersReducedMotion() ? 0 : performance.now();
       renderCanvas();
       if (!prefersReducedMotion()) startWaveAnim();
     };
     img.onerror = () => {
+      if (destroyed || requestId !== imageRequestId) return;
       state.image = null;
+      state.imageSrc = null;
       stopWaveAnim();
       syncDisplayToContainer();
       renderCanvas();
@@ -463,7 +492,7 @@ export function mountHeroAsciiLayer(options: {
 
   syncDisplayToContainer();
   state.waveTimeMs = prefersReducedMotion() ? 0 : performance.now();
-  loadHeaderImage(options.imageSrc);
+  loadHeaderImage(getActiveImageSrc());
   renderCanvas();
 
   return destroy;

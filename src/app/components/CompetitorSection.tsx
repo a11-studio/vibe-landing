@@ -128,7 +128,7 @@ const COMPETITOR_ROWS: CompetitorRow[] = [
 
 const cellLabel: CSSProperties = {
   fontWeight: 400,
-  fontSize: 15,
+  fontSize: "clamp(12px, 3.4vw, 15px)",
   color: "rgba(255, 255, 255, 0.5)",
   letterSpacing: "-0.45px",
   lineHeight: "normal",
@@ -136,10 +136,10 @@ const cellLabel: CSSProperties = {
 
 const cellValue: CSSProperties = {
   fontWeight: 500,
-  fontSize: 15,
+  fontSize: "clamp(12px, 3.4vw, 15px)",
   color: "#ffffff",
   letterSpacing: "-0.45px",
-  lineHeight: "normal",
+  lineHeight: 1.15,
 };
 
 /**
@@ -230,7 +230,7 @@ export function CompetitorSection() {
                     {COMPETITOR_ROWS.map((row) => (
                       <div
                         key={row.label}
-                        className="flex min-h-0 flex-1 flex-col items-center justify-center gap-2.5 px-2 py-8 max-md:px-1.5 md:flex-row md:gap-3.5 md:px-4 md:py-10"
+                      className="flex min-h-0 flex-1 flex-col items-center justify-center gap-2 px-1 py-6 md:flex-row md:gap-3.5 md:px-4 md:py-10"
                       >
                         <span style={cellValue}>{row.vibe}</span>
                         <CheckMark />
@@ -251,9 +251,9 @@ export function CompetitorSection() {
                   aria-hidden
                 />
                 <div
-                  className="col-span-3 flex min-w-0 max-w-full items-end justify-center pb-8 text-center font-medium max-md:col-span-5 md:pb-10"
+                    className="col-span-3 flex min-w-0 max-w-full items-end justify-center pb-6 text-center font-medium max-md:col-span-5 md:pb-10"
                   style={{
-                    fontSize: 24,
+                    fontSize: "clamp(18px, 5vw, 24px)",
                     color: "#ffffff",
                     letterSpacing: "-0.72px",
                     lineHeight: "normal",
@@ -290,11 +290,11 @@ export function CompetitorSection() {
                       {row.label}
                     </div>
                     <div
-                      className="col-span-3 min-w-0 py-8 max-md:col-span-7 md:py-10"
+                      className="col-span-3 min-w-0 py-6 max-md:col-span-7 md:py-10"
                       aria-hidden
                     />
                     <div
-                      className="col-span-3 flex min-w-0 max-w-full items-center justify-center py-8 text-center max-md:col-span-5 max-md:break-words md:col-span-3 md:py-10"
+                      className="col-span-3 flex min-w-0 max-w-full items-center justify-center px-1 py-6 text-center max-md:col-span-5 max-md:break-words md:col-span-3 md:px-0 md:py-10"
                       style={cellValue}
                     >
                       {row.agency}
