@@ -44,7 +44,14 @@ export function VibeLogoLottieHover({
   const lottieRef = useRef<LottieRefCurrentProps>(null);
   const [lottieSized, setLottieSized] = useState(false);
 
+  // Touch devices have no reliable hover — play on tap instead.
+  const isTouchDevice = window.matchMedia("(pointer: coarse)").matches;
+
   const holdRest = () => holdRestFrame(lottieRef.current, restFrame);
+  const playAnimation = () => {
+    if (!lottieSized) return;
+    lottieRef.current?.goToAndPlay(0, true);
+  };
 
   if (reducedMotion) {
     return <>{staticMark}</>;
@@ -54,11 +61,12 @@ export function VibeLogoLottieHover({
     <div
       className="relative flex shrink-0 cursor-pointer items-center justify-center overflow-visible"
       style={{ width, height }}
-      onPointerEnter={() => {
-        if (!lottieSized) return;
-        lottieRef.current?.goToAndPlay(0, true);
-      }}
-      onPointerLeave={holdRest}
+      {...(isTouchDevice
+        ? { onClick: playAnimation }
+        : {
+            onPointerEnter: playAnimation,
+            onPointerLeave: holdRest,
+          })}
     >
       <Lottie
         lottieRef={lottieRef}
