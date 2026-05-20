@@ -34,6 +34,8 @@ const MAX_SAMPLE_WIDTH = 480;
  * source video's native resolution).
  */
 const MAX_DISPLAY_WIDTH = 1280;
+/** Cap backing-store edge length — avoids OOM when CSS scale + high DPR stack. */
+const MAX_BACKING_EDGE = 4096;
 
 function qs(root: HTMLElement, name: string): HTMLInputElement | null {
   return root.querySelector(`[data-fv="${name}"]`);
@@ -144,6 +146,8 @@ export function initFvclip(
     /** Size of the in‑memory sampling canvas — drives per‑frame CPU cost. */
     sampleSize: { w: number; h: number };
     dpr: number;
+    /** Ancestor transform:scale() vs layout box — refreshed on relayout only. */
+    visualPaintScale: number;
     asciiCells: Array<{ cx: number; cy: number; char: string; localOpacity: number }>;
     sourceCrop: { sx: number; sy: number; sw: number; sh: number } | null;
   } = {
@@ -151,6 +155,7 @@ export function initFvclip(
     displaySize: { w: 800, h: 450 },
     sampleSize: { w: 800, h: 450 },
     dpr: 1,
+    visualPaintScale: 1,
     asciiCells: [],
     sourceCrop: null,
   };
@@ -163,6 +168,7 @@ export function initFvclip(
   let lastAppliedW = 0;
   let lastAppliedH = 0;
   let lastAppliedDpr = 0;
+  let lastAppliedVisualScale = 0;
   /**
    * Cached visual styles. `getComputedStyle()` is surprisingly expensive, so
    * the renderer reads it once at startup and again only on relayout / theme
@@ -298,16 +304,26 @@ export function initFvclip(
     context.drawImage(video, 0, 0, destW, destH);
   }
 
-  function scheduleLayoutApply(): void {
+  function applyLayoutNow(): void {
+    if (destroyed) return;
+    layoutTargetW = readLayoutTargetWidth();
+    if (state.media && state.media.videoWidth > 0) {
+      fitCanvasToMedia();
+      renderCanvas();
+    }
+  }
+
+  function scheduleLayoutApply(immediate = false): void {
     if (destroyed) return;
     if (layoutDebounceTimer) clearTimeout(layoutDebounceTimer);
+    if (immediate) {
+      layoutDebounceTimer = null;
+      applyLayoutNow();
+      return;
+    }
     layoutDebounceTimer = setTimeout(() => {
       layoutDebounceTimer = null;
-      layoutTargetW = readLayoutTargetWidth();
-      if (state.media && state.media.videoWidth > 0) {
-        fitCanvasToMedia();
-        renderCanvas();
-      }
+      applyLayoutNow();
     }, 80);
   }
 
@@ -376,30 +392,59 @@ export function initFvclip(
     return Math.max(lo, Math.min(hi, v));
   }
 
+  /**
+   * When an ancestor uses transform:scale(), layout size (offset*) stays small while
+   * getBoundingClientRect() reflects the upscaled visual — ResizeObserver alone may not
+   * re-run. Ratio > 1 means we need extra backing resolution so glyphs stay crisp.
+   */
+  function getVisualPaintScale(): number {
+    const rect = root.getBoundingClientRect();
+    const ow = root.offsetWidth;
+    const oh = root.offsetHeight;
+    if (ow < 1 || oh < 1) return 1;
+    const sx = rect.width / ow;
+    const sy = rect.height / oh;
+    return Math.max(1, sx, sy);
+  }
+
   function getBackingDpr(): number {
     let cap = parseFloat(
       root.getAttribute("data-fvclip-max-dpr") || root.getAttribute("data-max-dpr") || "2.5"
     );
     if (!cap || cap < 1) cap = 2.5;
     const dpr = typeof window !== "undefined" && window.devicePixelRatio ? window.devicePixelRatio : 1;
-    return Math.min(dpr, cap);
+    const visualScale = state.visualPaintScale;
+    return Math.min(dpr * visualScale, cap * visualScale);
   }
 
   function configurePreviewCanvases(): void {
     const w = state.displaySize.w;
     const h = state.displaySize.h;
     const dpr = getBackingDpr();
+    const visualScale = state.visualPaintScale;
     state.dpr = dpr;
 
-    if (w === lastAppliedW && h === lastAppliedH && dpr === lastAppliedDpr) {
+    if (
+      w === lastAppliedW &&
+      h === lastAppliedH &&
+      dpr === lastAppliedDpr &&
+      visualScale === lastAppliedVisualScale
+    ) {
       return;
     }
     lastAppliedW = w;
     lastAppliedH = h;
     lastAppliedDpr = dpr;
+    lastAppliedVisualScale = visualScale;
 
-    const bw = Math.max(1, Math.round(w * dpr));
-    const bh = Math.max(1, Math.round(h * dpr));
+    let bw = Math.max(1, Math.round(w * dpr));
+    let bh = Math.max(1, Math.round(h * dpr));
+    const edge = Math.max(bw, bh);
+    if (edge > MAX_BACKING_EDGE) {
+      const shrink = MAX_BACKING_EDGE / edge;
+      bw = Math.max(1, Math.round(bw * shrink));
+      bh = Math.max(1, Math.round(bh * shrink));
+    }
 
     for (const el of [els.canvasBase, els.canvasOverlay]) {
       el.style.width = `${w}px`;
@@ -408,14 +453,17 @@ export function initFvclip(
       el.height = bh;
     }
 
+    const scaleX = bw / w;
+    const scaleY = bh / h;
+
     ctxBase.setTransform(1, 0, 0, 1, 0, 0);
     ctxOverlay.setTransform(1, 0, 0, 1, 0, 0);
-    ctxBase.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctxOverlay.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctxBase.setTransform(scaleX, 0, 0, scaleY, 0, 0);
+    ctxOverlay.setTransform(scaleX, 0, 0, scaleY, 0, 0);
 
     ctxBase.imageSmoothingEnabled = true;
     ctxBase.imageSmoothingQuality = "high";
-    ctxOverlay.imageSmoothingEnabled = true;
+    ctxOverlay.imageSmoothingEnabled = false;
   }
 
   function fitCanvasToMedia(): void {
@@ -424,24 +472,25 @@ export function initFvclip(
     const iw = v.videoWidth;
     const ih = v.videoHeight;
     if (iw < 1 || ih < 1) return;
+    state.visualPaintScale = getVisualPaintScale();
     const fit = getFitMode();
     let displayW: number;
     let displayH: number;
 
     if (fit === "cover-x") {
-      const targetW = layoutTargetW || readLayoutTargetWidth();
+      const targetW = readLayoutTargetWidth();
       const targetH = readLayoutTargetHeight();
       displayW = Math.max(1, Math.min(targetW, MAX_DISPLAY_WIDTH));
       displayH = Math.max(1, targetH);
       state.sourceCrop = computeHorizontalSourceCrop(iw, ih, displayW, displayH, getCropZoom());
     } else if (fit === "cover") {
-      const targetW = layoutTargetW || readLayoutTargetWidth();
+      const targetW = readLayoutTargetWidth();
       const targetH = readLayoutTargetHeight();
       displayW = Math.max(1, Math.min(targetW, MAX_DISPLAY_WIDTH));
       displayH = Math.max(1, targetH);
       state.sourceCrop = computeSourceCrop(iw, ih, displayW, displayH, getCropZoom());
     } else {
-      const targetW = layoutTargetW || readLayoutTargetWidth();
+      const targetW = readLayoutTargetWidth();
       displayW = Math.max(1, Math.min(targetW, MAX_DISPLAY_WIDTH));
       displayH = Math.max(1, Math.round(ih * (displayW / iw)));
       const zoom = getCropZoom();
@@ -953,14 +1002,47 @@ export function initFvclip(
     mqReduce.addListener(onReduceMotion);
   }
 
+  function scheduleWarmupRelayouts(): void {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (!destroyed) scheduleLayoutApply(true);
+      });
+    });
+    for (const ms of [0, 100, 300, 600, 1200]) {
+      setTimeout(() => {
+        if (!destroyed) scheduleLayoutApply(true);
+      }, ms);
+    }
+  }
+
+  let onVisualViewportChange: (() => void) | null = null;
+  const visualViewport = typeof window !== "undefined" ? window.visualViewport : null;
+  if (visualViewport) {
+    onVisualViewportChange = () => scheduleLayoutApply(true);
+    visualViewport.addEventListener("resize", onVisualViewportChange);
+    visualViewport.addEventListener("scroll", onVisualViewportChange);
+  }
+
   if (typeof ResizeObserver !== "undefined") {
-    resizeObserver = new ResizeObserver(() => {
-      // Styles (CSS vars, computed font stack) often shift in tandem with
-      // layout changes — re-read them on the next paint instead of every frame.
+    resizeObserver = new ResizeObserver((entries) => {
       invalidateStyles();
+      for (const entry of entries) {
+        const el = entry.target;
+        if (!(el instanceof HTMLElement)) continue;
+        const cr = entry.contentRect;
+        const br = el.getBoundingClientRect();
+        if (
+          Math.abs(br.width - cr.width) > 2 ||
+          Math.abs(br.height - cr.height) > 2
+        ) {
+          scheduleLayoutApply(true);
+          return;
+        }
+      }
       scheduleLayoutApply();
     });
     resizeObserver.observe(root);
+    if (root.parentElement) resizeObserver.observe(root.parentElement);
   }
   window.addEventListener("resize", scheduleLayoutApply);
 
@@ -1022,6 +1104,8 @@ export function initFvclip(
   if (defaultVideoSrc) loadVideo(defaultVideoSrc);
   else renderCanvas();
 
+  scheduleWarmupRelayouts();
+
   return {
     root,
     setVideoSrc(src) {
@@ -1030,11 +1114,7 @@ export function initFvclip(
     },
     relayout() {
       if (destroyed) return;
-      layoutTargetW = readLayoutTargetWidth();
-      if (state.media && state.media.videoWidth > 0) {
-        fitCanvasToMedia();
-        renderCanvas();
-      }
+      applyLayoutNow();
     },
     destroy() {
       if (destroyed) return;
@@ -1056,6 +1136,11 @@ export function initFvclip(
       els.srcVideo.removeEventListener("pause", onPause);
       els.srcVideo.removeEventListener("ended", onEnded);
       window.removeEventListener("resize", scheduleLayoutApply);
+      if (onVisualViewportChange && visualViewport) {
+        visualViewport.removeEventListener("resize", onVisualViewportChange);
+        visualViewport.removeEventListener("scroll", onVisualViewportChange);
+        onVisualViewportChange = null;
+      }
       if (resizeObserver) {
         resizeObserver.disconnect();
         resizeObserver = null;
