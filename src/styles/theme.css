@@ -395,9 +395,13 @@ html {
   }
 }
 
-/* Mobile footer flower: fvclip rastie zo šírky — pri vysokom portrait (veľké svh) dorovnávame veľkosť cez scale + svh/vw. */
+/* Mobile footer flower: layout 150vw + scale (canvas meria offsetWidth, nie rect). */
 @media (max-width: 767px) {
   .footer-mobile-flower-visual {
+    width: 150vw;
+    max-width: none;
+    flex-shrink: 0;
+    align-self: center;
     transform-origin: bottom center;
     transform: scale(
       min(
@@ -409,9 +413,13 @@ html {
       )
     );
   }
+
+  .footer-mobile-flower-visual .fvclip {
+    height: auto;
+    min-height: 1px;
+  }
 }
 
-/* Mobile footer flower: výška > 600 px — ďalších ~1.6× oproti základné škále nižšie */
 @media (max-width: 767px) and (min-height: 601px) {
   .footer-mobile-flower-visual {
     transform: scale(
@@ -546,6 +554,17 @@ html {
   border-radius: 0;
   background: var(--fvclip-field);
   z-index: 1;
+}
+
+@media (max-width: 767px) {
+  .fvclip__plate {
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+  }
+
+  .hero-header-flower .fvclip {
+    transform: translateZ(0);
+  }
 }
 
 .fvclip__plate--glyphs {

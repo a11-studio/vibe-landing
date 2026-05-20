@@ -28,6 +28,7 @@ export type InitFvclipOptions = {
  * adding visual detail. Caps the per‑frame CPU cost on wide viewports.
  */
 const MAX_SAMPLE_WIDTH = 480;
+const DEFAULT_MAX_SAMPLE_ATTR = "data-fvclip-max-sample-width";
 /**
  * Visible canvas width is capped to keep the ASCII silhouette at a sensible
  * size on very large viewports (was previously capped implicitly by the
@@ -36,6 +37,7 @@ const MAX_SAMPLE_WIDTH = 480;
 const MAX_DISPLAY_WIDTH = 1280;
 /** Cap backing-store edge length — avoids OOM when CSS scale + high DPR stack. */
 const MAX_BACKING_EDGE = 4096;
+const MAX_BACKING_EDGE_TOUCH = 8192;
 
 function qs(root: HTMLElement, name: string): HTMLInputElement | null {
   return root.querySelector(`[data-fv="${name}"]`);
@@ -212,14 +214,19 @@ export function initFvclip(
 
   if (!sampleCtx || !ctxBase || !ctxOverlay) return null;
 
+  /** Layout box only — excludes ancestor transform:scale() (getBoundingClientRect does not). */
   function readLayoutTargetWidth(): number {
-    const r = root.getBoundingClientRect();
-    return Math.max(1, Math.floor(r.width));
+    return Math.max(1, Math.floor(root.clientWidth || root.offsetWidth));
   }
 
   function readLayoutTargetHeight(): number {
-    const r = root.getBoundingClientRect();
-    return Math.max(1, Math.floor(r.height));
+    return Math.max(1, Math.floor(root.clientHeight || root.offsetHeight));
+  }
+
+  function readMaxSampleWidth(): number {
+    const raw = parseFloat(root.getAttribute(DEFAULT_MAX_SAMPLE_ATTR) || "");
+    if (Number.isFinite(raw) && raw >= 120) return Math.floor(raw);
+    return MAX_SAMPLE_WIDTH;
   }
 
   function usesTransparentField(): boolean {
@@ -306,9 +313,18 @@ export function initFvclip(
 
   function applyLayoutNow(): void {
     if (destroyed) return;
+    state.visualPaintScale = getVisualPaintScale();
     layoutTargetW = readLayoutTargetWidth();
     if (state.media && state.media.videoWidth > 0) {
       fitCanvasToMedia();
+      renderCanvas();
+      return;
+    }
+    const layoutW = readLayoutTargetWidth();
+    const layoutH = readLayoutTargetHeight();
+    if (layoutW > 1 && layoutH > 1) {
+      state.displaySize.w = layoutW;
+      state.displaySize.h = layoutH;
       renderCanvas();
     }
   }
@@ -420,30 +436,36 @@ export function initFvclip(
   function configurePreviewCanvases(): void {
     const w = state.displaySize.w;
     const h = state.displaySize.h;
-    const dpr = getBackingDpr();
+    let paintDpr = getBackingDpr();
     const visualScale = state.visualPaintScale;
-    state.dpr = dpr;
+    state.dpr = paintDpr;
 
     if (
       w === lastAppliedW &&
       h === lastAppliedH &&
-      dpr === lastAppliedDpr &&
+      paintDpr === lastAppliedDpr &&
       visualScale === lastAppliedVisualScale
     ) {
       return;
     }
     lastAppliedW = w;
     lastAppliedH = h;
-    lastAppliedDpr = dpr;
+    lastAppliedDpr = paintDpr;
     lastAppliedVisualScale = visualScale;
 
-    let bw = Math.max(1, Math.round(w * dpr));
-    let bh = Math.max(1, Math.round(h * dpr));
+    let bw = Math.max(1, Math.round(w * paintDpr));
+    let bh = Math.max(1, Math.round(h * paintDpr));
+    const maxEdge =
+      typeof window !== "undefined" &&
+      window.matchMedia("(pointer: coarse)").matches
+        ? MAX_BACKING_EDGE_TOUCH
+        : MAX_BACKING_EDGE;
     const edge = Math.max(bw, bh);
-    if (edge > MAX_BACKING_EDGE) {
-      const shrink = MAX_BACKING_EDGE / edge;
-      bw = Math.max(1, Math.round(bw * shrink));
-      bh = Math.max(1, Math.round(bh * shrink));
+    if (edge > maxEdge) {
+      paintDpr = maxEdge / Math.max(w, h);
+      state.dpr = paintDpr;
+      bw = Math.max(1, Math.round(w * paintDpr));
+      bh = Math.max(1, Math.round(h * paintDpr));
     }
 
     for (const el of [els.canvasBase, els.canvasOverlay]) {
@@ -453,13 +475,10 @@ export function initFvclip(
       el.height = bh;
     }
 
-    const scaleX = bw / w;
-    const scaleY = bh / h;
-
     ctxBase.setTransform(1, 0, 0, 1, 0, 0);
     ctxOverlay.setTransform(1, 0, 0, 1, 0, 0);
-    ctxBase.setTransform(scaleX, 0, 0, scaleY, 0, 0);
-    ctxOverlay.setTransform(scaleX, 0, 0, scaleY, 0, 0);
+    ctxBase.setTransform(paintDpr, 0, 0, paintDpr, 0, 0);
+    ctxOverlay.setTransform(paintDpr, 0, 0, paintDpr, 0, 0);
 
     ctxBase.imageSmoothingEnabled = true;
     ctxBase.imageSmoothingQuality = "high";
@@ -504,7 +523,8 @@ export function initFvclip(
       }
     }
 
-    const sampleW = Math.max(1, Math.min(displayW, iw, MAX_SAMPLE_WIDTH));
+    const maxSampleW = readMaxSampleWidth();
+    const sampleW = Math.max(1, Math.min(displayW, iw, maxSampleW));
     const sampleH = Math.max(1, Math.round(displayH * (sampleW / displayW)));
     state.displaySize.w = displayW;
     state.displaySize.h = displayH;
@@ -862,7 +882,7 @@ export function initFvclip(
     const opacity = t.overlayOpacity;
     const scale = t.charScale;
     const cell = t.gridSize;
-    const fontSize = Math.max(7, cell * scale * 1.02);
+    const fontSize = Math.max(7, Math.round(cell * scale * 1.02));
 
     context.save();
     context.clearRect(0, 0, w, h);
@@ -1061,12 +1081,14 @@ export function initFvclip(
         /* play() may not have resolved yet */
       }
     } else if (!offscreen && wasOffscreen) {
+      scheduleLayoutApply(true);
       if (!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
         ensureVideoSilent(els.srcVideo);
         const p = els.srcVideo.play();
         if (p && typeof p.then === "function") p.catch(() => {});
       }
       startVideoPreviewLoop();
+      renderCanvas();
     }
   }
   if (
@@ -1098,7 +1120,7 @@ export function initFvclip(
   layoutTargetW = readLayoutTargetWidth();
   state.displaySize.w = Math.max(320, layoutTargetW);
   state.displaySize.h = Math.round((state.displaySize.w * 9) / 16);
-  state.sampleSize.w = Math.min(state.displaySize.w, MAX_SAMPLE_WIDTH);
+  state.sampleSize.w = Math.min(state.displaySize.w, readMaxSampleWidth());
   state.sampleSize.h = Math.round((state.sampleSize.w * 9) / 16);
 
   if (defaultVideoSrc) loadVideo(defaultVideoSrc);

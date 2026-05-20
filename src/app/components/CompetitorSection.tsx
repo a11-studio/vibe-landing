@@ -34,7 +34,7 @@ function VibeColumnFrame({ children }: { children: ReactNode }) {
         aria-hidden
       />
       <div
-        className="relative z-[1] m-[2px] flex min-h-0 flex-1 flex-col rounded-[12px]"
+        className="relative z-[1] m-[2px] flex min-h-0 flex-1 flex-col rounded-[12px] max-md:m-[3px]"
         style={{ backgroundColor: SECTION_BG }}
       >
         {children}
@@ -136,10 +136,10 @@ const cellLabel: CSSProperties = {
 
 const cellValue: CSSProperties = {
   fontWeight: 500,
-  fontSize: "clamp(12px, 3.4vw, 15px)",
+  fontSize: "clamp(13px, 3.6vw, 15px)",
   color: "#ffffff",
   letterSpacing: "-0.45px",
-  lineHeight: 1.15,
+  lineHeight: "normal",
 };
 
 /**
@@ -177,10 +177,10 @@ export function CompetitorSection() {
       style={{ backgroundColor: SECTION_BG }}
     >
       <LayoutContainer
-        className="max-md:px-3"
+        className="max-md:px-4"
         style={{
-          paddingTop: "clamp(72px, 9vw, 140px)",
-          paddingBottom: "clamp(72px, 9vw, 140px)",
+          paddingTop: "clamp(80px, 10vw, 140px)",
+          paddingBottom: "clamp(80px, 10vw, 140px)",
         }}
       >
         <header className="mx-auto min-w-0 max-w-[920px] text-center">
@@ -212,7 +212,7 @@ export function CompetitorSection() {
           />
         </header>
 
-        <div className="mx-auto mt-[clamp(40px,6vw,72px)] max-w-[1220px] overflow-x-auto">
+        <div className="mx-auto mt-[clamp(48px,7vw,72px)] max-w-[1220px] overflow-x-auto">
           <div ref={tableShellRef} className="relative w-full min-w-0">
             {/* Rám Vibe: stĺpce 5–7 (3/12 šírky), vertikálne cez hlavičku + dátové riadky; čiary z-[15] sú navrchu. */}
             <div
@@ -222,7 +222,7 @@ export function CompetitorSection() {
               <div className="pointer-events-auto h-full">
                 <VibeColumnFrame>
                   <div className="flex h-full min-h-full flex-col">
-                    <div className="flex shrink-0 justify-center px-4 pb-8 pt-8 md:px-5 md:pb-10 md:pt-10">
+                    <div className="flex shrink-0 justify-center px-4 pb-10 pt-10 max-md:pb-11 max-md:pt-11 md:px-5 md:pb-10 md:pt-10">
                       <span className="inline-flex" aria-label="Vibe">
                         <VibeLogoWhite />
                       </span>
@@ -230,7 +230,7 @@ export function CompetitorSection() {
                     {COMPETITOR_ROWS.map((row) => (
                       <div
                         key={row.label}
-                      className="flex min-h-0 flex-1 flex-col items-center justify-center gap-2 px-1 py-6 md:flex-row md:gap-3.5 md:px-4 md:py-10"
+                      className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 px-2 py-9 max-md:py-10 md:flex-row md:gap-3.5 md:px-4 md:py-10"
                       >
                         <span style={cellValue}>{row.vibe}</span>
                         <CheckMark />
@@ -247,11 +247,11 @@ export function CompetitorSection() {
                 <div className="col-span-2 min-w-0 max-md:hidden" aria-hidden />
                 <div
                   className="col-span-3 min-w-0 max-md:col-span-7"
-                  style={{ minHeight: "clamp(96px, 12vw, 112px)" }}
+                  style={{ minHeight: "clamp(108px, 14vw, 120px)" }}
                   aria-hidden
                 />
                 <div
-                    className="col-span-3 flex min-w-0 max-w-full items-end justify-center pb-6 text-center font-medium max-md:col-span-5 md:pb-10"
+                    className="col-span-3 flex min-w-0 max-w-full items-end justify-center pb-8 text-center font-medium max-md:col-span-5 max-md:pb-10 md:pb-10"
                   style={{
                     fontSize: "clamp(18px, 5vw, 24px)",
                     color: "#ffffff",
@@ -290,11 +290,11 @@ export function CompetitorSection() {
                       {row.label}
                     </div>
                     <div
-                      className="col-span-3 min-w-0 py-6 max-md:col-span-7 md:py-10"
+                      className="col-span-3 min-w-0 py-9 max-md:col-span-7 max-md:py-10 md:py-10"
                       aria-hidden
                     />
                     <div
-                      className="col-span-3 flex min-w-0 max-w-full items-center justify-center px-1 py-6 text-center max-md:col-span-5 max-md:break-words md:col-span-3 md:px-0 md:py-10"
+                      className="col-span-3 flex min-w-0 max-w-full items-center justify-center px-2 py-9 text-center max-md:col-span-5 max-md:py-10 max-md:break-words md:col-span-3 md:px-0 md:py-10"
                       style={cellValue}
                     >
                       {row.agency}

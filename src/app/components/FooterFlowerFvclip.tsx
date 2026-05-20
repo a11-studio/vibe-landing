@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import { cn } from "@/app/components/ui/utils";
 import flowerMp4 from "@/assets/flower.mp4";
 import { initFvclip } from "@/lib/fvclipInit";
@@ -11,46 +11,75 @@ export function FooterFlowerFvclip({
   variant = "footer",
   /** Hustejšia mriežka + vyššia pravdepodobnosť bodu — lepšia čitateľnosť tvaru na úzkych displejoch. */
   dense = false,
+  /** Safari/iOS: druhý canvas na stránke môže byť rozmazaný — oneskoríme init. */
+  initDelayMs = 0,
+  /** Mobilný footer — vždy renderovať (IO + 0 výška ho skrývali). */
+  mobileFooter = false,
 }: {
   className?: string;
   style?: CSSProperties;
   variant?: "footer" | "hero";
   dense?: boolean;
+  initDelayMs?: number;
+  mobileFooter?: boolean;
 }) {
   const rootRef = useRef<HTMLDivElement>(null);
 
   // Detect touch/mobile once — stable across the component's lifetime.
   const isTouchDevice = window.matchMedia("(pointer: coarse)").matches;
 
-  useEffect(() => {
+  useLayoutEffect(() => {
+    if (initDelayMs > 0) return;
     const root = rootRef.current;
     if (!root) return;
-    // On touch/mobile devices ping-pong scrubs `currentTime` in every rAF
-    // tick — Safari mobile can't decode frames fast enough, causing freeze and
-    // stutter. Use native loop there; ping-pong stays on desktop.
     const api = initFvclip(root, {
       videoSrc: flowerMp4,
       loop: true,
       pingPong: !isTouchDevice,
     });
-    return () => api?.destroy();
-  }, [isTouchDevice]);
+    const raf = requestAnimationFrame(() => api?.relayout());
+    return () => {
+      cancelAnimationFrame(raf);
+      api?.destroy();
+    };
+  }, [isTouchDevice, initDelayMs]);
+
+  useEffect(() => {
+    if (initDelayMs <= 0) return;
+    const root = rootRef.current;
+    if (!root) return;
+    let api: ReturnType<typeof initFvclip> | null = null;
+    const timer = window.setTimeout(() => {
+      api = initFvclip(root, {
+        videoSrc: flowerMp4,
+        loop: true,
+        pingPong: !isTouchDevice,
+      });
+      requestAnimationFrame(() => api?.relayout());
+    }, initDelayMs);
+    return () => {
+      window.clearTimeout(timer);
+      api?.destroy();
+    };
+  }, [isTouchDevice, initDelayMs]);
 
   // On high-DPR mobile screens (iPhone DPR 3) a cap of 2 makes each glyph
   // render at 2/3 native pixel density → blurry dots. Raise cap to 3 on touch
   // devices; keep 2 on desktop where it's already sharp and saves GPU memory.
   const maxDpr = isTouchDevice ? "3" : "2";
+  const maxSampleWidth = isTouchDevice ? "960" : undefined;
 
   const isHero = variant === "hero";
 
   return (
     <div
       ref={rootRef}
-      className={cn("fvclip h-full w-full", isHero && "fvclip--hero", className)}
+      className={cn("fvclip w-full", isHero && "fvclip--hero h-full", className)}
       data-fvclip
       data-fvclip-max-dpr={maxDpr}
+      data-fvclip-max-sample-width={maxSampleWidth}
       data-fvclip-transparent={isHero ? "true" : undefined}
-      data-fvclip-visibility={isHero ? "always" : undefined}
+      data-fvclip-visibility={isHero || mobileFooter ? "always" : undefined}
       data-fvclip-fit={isHero ? "cover-x" : undefined}
       data-fvclip-crop-zoom={isHero ? "1.55" : undefined}
       style={
@@ -59,7 +88,7 @@ export function FooterFlowerFvclip({
           : style
       }
     >
-      <div className="fvclip__inner h-full" aria-hidden>
+      <div className={cn("fvclip__inner", isHero && "h-full")} aria-hidden>
         <div className="fvclip__stage">
           <video
             className="fvclip__film"

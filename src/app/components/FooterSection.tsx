@@ -414,12 +414,12 @@ export function FooterSection() {
             <LayoutGrid className="content-start">{mainColumn}</LayoutGrid>
           </LayoutContainer>
           <div
-            className="pointer-events-none relative z-[1] flex min-h-[clamp(268px,40svh,620px)] max-h-[min(90svh,980px)] w-full flex-1 flex-col overflow-hidden"
+            className="pointer-events-none relative z-[5] flex min-h-[clamp(268px,40svh,620px)] max-h-[min(90svh,980px)] w-full flex-1 flex-col overflow-x-clip overflow-y-visible"
             aria-hidden
           >
             <div className="pointer-events-none mx-auto flex h-full min-h-0 w-full flex-1 items-end justify-center overflow-visible">
               <div className="footer-mobile-flower-visual w-[150vw] max-w-none shrink-0">
-                <FooterFlowerFvclip className="w-full" dense />
+                <FooterFlowerFvclip className="w-full" dense mobileFooter />
               </div>
             </div>
           </div>
