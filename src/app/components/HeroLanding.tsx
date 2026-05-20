@@ -1,7 +1,7 @@
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useLayoutEffect, useState } from "react";
 import { useInView } from "@/app/hooks/useInView";
-import imgHeroBackground from "@/imports/main-background.webp";
-import { HeroAsciiPattern } from "@/app/components/HeroAsciiPattern";
+import imgHeroImage from "@/imports/image.webp";
+import { HeroFlowerPattern } from "@/app/components/HeroFlowerPattern";
 import { HeroNavbar } from "@/app/components/HeroNavbar";
 import { ScheduleCTA } from "@/app/components/ScheduleCTA";
 import { LogosSection } from "@/app/components/LogosSection";
@@ -15,10 +15,27 @@ import { LayoutContainer } from "@/app/components/layout";
 import { RevealHeadline } from "@/app/components/RevealHeadline";
 
 const SCROLL_NAVBAR_THRESHOLD_PX = 40;
-const SCROLL_HINT_HIDE_PX = 60;
+const HERO_IMAGE_EXPAND_SCROLL_PX = 520;
+
+function clamp(value: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, value));
+}
+
+function measureHeroImageWidths() {
+  const viewportWidth = window.innerWidth;
+  const layoutMax = Math.min(viewportWidth, 1920);
+  const marginX = clamp(viewportWidth * 0.021, 24, 40);
+  const innerWidth = layoutMax - marginX * 2;
+  const columnWidth = (innerWidth - 11 * 20) / 12;
+  const narrowWidth =
+    viewportWidth >= 768 ? columnWidth * 10 + 9 * 20 : innerWidth;
+
+  return { narrow: narrowWidth, full: viewportWidth };
+}
 
 export function HeroLanding() {
   const [scrollY, setScrollY] = useState(0);
+  const [imageWidths, setImageWidths] = useState({ narrow: 0, full: 0 });
   const [menuOpen, setMenuOpen] = useState(false);
   const menuPanelId = useId();
   const { ref: heroIntroRef, inView: heroInView } = useInView<HTMLDivElement>({
@@ -29,8 +46,22 @@ export function HeroLanding() {
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
     window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  useLayoutEffect(() => {
+    const syncWidths = () => setImageWidths(measureHeroImageWidths());
+    syncWidths();
+    window.addEventListener("resize", syncWidths);
+    return () => window.removeEventListener("resize", syncWidths);
+  }, []);
+
+  const imageExpandProgress = clamp(scrollY / HERO_IMAGE_EXPAND_SCROLL_PX, 0, 1);
+  const heroImageWidth =
+    imageWidths.narrow +
+    (imageWidths.full - imageWidths.narrow) * imageExpandProgress;
+  const heroImageMarginLeft = Math.max(0, (imageWidths.full - heroImageWidth) / 2);
 
   return (
     <>
@@ -43,81 +74,77 @@ export function HeroLanding() {
 
       <div className="relative w-full bg-[var(--logos-canvas)]">
 
-        {/* ── Hero ── */}
-        <section
-          id="hero"
-          className="relative flex w-full items-center justify-center overflow-x-visible overflow-y-clip"
-          style={{ minHeight: "100vh" }}
-        >
-          {/* Background */}
-          <div className="absolute inset-0 z-0 pointer-events-none">
-            <img
-              src={imgHeroBackground}
-              alt=""
-              aria-hidden
-              className="w-full h-full object-cover"
-            />
+        {/* ── Hero — biely header (Figma 640:2) ── */}
+        <section id="hero" className="relative w-full overflow-x-clip bg-white">
+          <div
+            className="relative flex min-h-svh flex-col"
+            style={{ paddingBottom: "var(--hero-image-peek)" }}
+          >
+            <HeroFlowerPattern side="left" />
+            <HeroFlowerPattern side="right" />
+
+            <LayoutContainer className="relative z-10 flex flex-1 flex-col items-center justify-center pb-4 pt-[var(--hero-nav-clearance)]">
+              <div
+                ref={heroIntroRef}
+                className="mx-auto flex w-full flex-col items-center text-center"
+                style={{ maxWidth: "var(--hero-headline-max-width)" }}
+              >
+                <RevealHeadline
+                  as="h1"
+                  inView={heroInView}
+                  lines={["Designing the future", "with taste"]}
+                  className="m-0 w-full font-medium text-[var(--hero-brown)]"
+                  style={{
+                    fontWeight: 500,
+                    fontSize: "clamp(34px, 4.375vw, 84px)",
+                    lineHeight: 1,
+                    letterSpacing: "clamp(-1.2px, -0.131vw, -2.52px)",
+                  }}
+                />
+                <RevealHeadline
+                  as="p"
+                  inView={heroInView}
+                  lines={[
+                    "Blending culture, technology, and aesthetics",
+                    "into high-class experiences.",
+                  ]}
+                  staggerBaseDelayS={0.6}
+                  className="m-0 w-full text-center font-normal text-[var(--hero-tagline)]"
+                  style={{
+                    marginTop: "var(--hero-headline-tagline-gap)",
+                    maxWidth: "var(--hero-tagline-max-width)",
+                    fontWeight: 400,
+                    fontSize: "clamp(14px, 1.04vw, 20px)",
+                    lineHeight: 1.6,
+                  }}
+                />
+              </div>
+            </LayoutContainer>
           </div>
 
-          {/* Glow — pod ASCII patternom (z-[1]) */}
           <div
-            className="pointer-events-none absolute left-1/2 top-1/2 z-[1] w-[60%] max-w-[900px] -translate-x-1/2 -translate-y-1/2"
+            className="relative z-[1] w-full"
             style={{
-              height: 200,
-              borderRadius: "50%",
-              filter: "blur(88px)",
-              background: "linear-gradient(84deg, rgb(182,179,64) 1%, rgb(14,146,102) 96%)",
-              opacity: 0.55,
+              marginTop: "calc(-1 * var(--hero-image-peek))",
+              paddingTop: "var(--hero-tagline-image-gap)",
             }}
-            aria-hidden
-          />
-
-          {/* ASCII vzorka nad pozadím */}
-          <HeroAsciiPattern />
-
-          <LayoutContainer className="relative z-10 flex justify-center">
-            <div ref={heroIntroRef} className="flex flex-col items-center text-center">
-              <div className="relative isolate mb-2 w-full sm:mb-3">
-                <div className="relative z-10 px-0 pt-5 pb-2 sm:px-9 sm:pt-6 sm:pb-2 md:px-12 md:pt-7 md:pb-2 lg:px-14 lg:pt-8 lg:pb-2.5">
-                  <RevealHeadline
-                    as="h1"
-                    inView={heroInView}
-                    lines={["Designing the future", "with taste"]}
-                    className="m-0 font-medium text-white"
-                    style={{
-                      fontWeight: 500,
-                      fontSize: "clamp(34px, 5vw, 62px)",
-                      lineHeight: 0.96,
-                      letterSpacing: "clamp(-2px, -0.34vw, -1.2px)",
-                    }}
-                  />
-                </div>
-              </div>
-              <RevealHeadline
-                as="p"
-                inView={heroInView}
-                lines={[
-                  "Blending culture, technology, and aesthetics",
-                  "into high-class experiences.",
-                ]}
-                staggerBaseDelayS={0.6}
-                className="m-0 max-w-[min(100%,42rem)] text-center font-normal text-white/90 mt-1 sm:mt-1.5"
-                style={{
-                  fontWeight: 400,
-                  fontSize: "clamp(14px, 1.5vw, 20px)",
-                  lineHeight: 1.42,
-                }}
+          >
+            <div
+              className="overflow-hidden will-change-[width,margin]"
+              style={{
+                width: heroImageWidth > 0 ? `${heroImageWidth}px` : "100%",
+                marginLeft: heroImageWidth > 0 ? `${heroImageMarginLeft}px` : undefined,
+              }}
+            >
+              <img
+                src={imgHeroImage}
+                alt=""
+                aria-hidden
+                className="pointer-events-none block h-auto w-full"
+                loading="eager"
+                decoding="async"
               />
             </div>
-          </LayoutContainer>
-
-          {/* Scroll hint */}
-          <div
-            className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-1.5 transition-opacity duration-300"
-            style={{ opacity: scrollY > SCROLL_HINT_HIDE_PX ? 0 : 1 }}
-          >
-            <span className="hero-scroll-hint text-xs tracking-widest uppercase">Scroll</span>
-            <div className="w-px h-8 bg-white/30 animate-pulse" />
           </div>
         </section>
 

@@ -8,6 +8,8 @@ import { LayoutContainer } from "@/app/components/layout";
 import { CALENDLY_BOOKING_URL, MOBILE_NAV } from "@/app/components/heroConstants";
 
 // ─── Logo ─────────────────────────────────────────────────────────────────────
+const HERO_BROWN = "var(--hero-brown)";
+
 function VibeLogo() {
   const reducedMotion = useReducedMotion();
 
@@ -25,10 +27,10 @@ function VibeLogo() {
           fill="none"
           className="block max-h-full max-w-full"
         >
-          <path d={svgPaths.p2ed8a900} fill="black" />
-          <path d={svgPaths.pf4d1e80} fill="black" />
-          <path d={svgPaths.p2bd5b200} fill="black" />
-          <path d={svgPaths.p3ab9e400} fill="black" />
+          <path d={svgPaths.p2ed8a900} fill={HERO_BROWN} />
+          <path d={svgPaths.pf4d1e80} fill={HERO_BROWN} />
+          <path d={svgPaths.p2bd5b200} fill={HERO_BROWN} />
+          <path d={svgPaths.p3ab9e400} fill={HERO_BROWN} />
         </svg>
       }
     />
@@ -206,10 +208,10 @@ function HeroDesktopNav({
           onFocus={() => showAtIndex(index)}
           onBlur={onLinkBlur}
           className={cn(
-            "relative z-[2] inline-flex items-center justify-center rounded-[50px] px-4 py-2 text-[15px] font-medium whitespace-nowrap text-black outline-none select-none",
+            "relative z-[2] inline-flex items-center justify-center rounded-[50px] px-4 py-2 text-[15px] font-medium whitespace-nowrap text-[var(--hero-brown)] outline-none select-none",
             "transition-colors duration-200 ease-out motion-reduce:transition-none",
-            hoverIdx === index && "text-[rgba(0,0,0,0.7)]",
-            "focus-visible:text-[rgba(0,0,0,0.7)] motion-reduce:focus-visible:text-black",
+            hoverIdx === index && "text-[rgba(53,24,14,0.7)]",
+            "focus-visible:text-[rgba(53,24,14,0.7)] motion-reduce:focus-visible:text-[var(--hero-brown)]",
           )}
           onClick={() => {
             if (menuOpen) onMenuOpenChange(false);
@@ -492,7 +494,7 @@ export function HeroNavbar({
         <LayoutContainer className="flex w-full max-w-full flex-col items-center">
           <nav
             ref={navRef}
-            className="isolate inline-flex max-w-full items-center gap-4 px-4 rounded-[70px] transition-all duration-500 sm:w-[min(420px,calc(100vw-32px))] sm:gap-4 sm:px-5"
+            className="isolate inline-flex max-w-full items-center gap-4 rounded-[70px] border border-[var(--hero-nav-border)] px-4 transition-all duration-500 sm:w-[min(420px,calc(100vw-32px))] sm:gap-4 sm:px-5"
             style={{
               minHeight: 54,
               backgroundColor: scrolled ? "rgba(255,255,255,0.92)" : "rgba(255,255,255,1)",
@@ -524,7 +526,7 @@ export function HeroNavbar({
             <button
               ref={closeRef}
               type="button"
-              className="flex h-6 w-6 cursor-pointer shrink-0 items-center justify-center text-[#212121] transition-opacity duration-200 hover:opacity-50"
+              className="flex h-6 w-6 cursor-pointer shrink-0 items-center justify-center text-[var(--hero-brown)] transition-opacity duration-200 hover:opacity-50"
               aria-label={menuOpen ? "Close menu" : "Open menu"}
               aria-expanded={menuOpen}
               aria-controls={menuOpen ? menuPanelId : undefined}
