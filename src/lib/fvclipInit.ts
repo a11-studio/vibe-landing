@@ -95,13 +95,30 @@ export function initFvclip(
     return "Inter, system-ui, sans-serif";
   }
 
+  function resolveThemeColor(raw: string, fallback: string): string {
+    const value = raw.trim();
+    if (!value) return fallback;
+    if (/^#|^rgb|^hsl|transparent/i.test(value)) return value;
+
+    const probe = document.createElement("span");
+    probe.style.color = value;
+    root.appendChild(probe);
+    const resolved = getComputedStyle(probe).color;
+    probe.remove();
+    return resolved && resolved !== "rgba(0, 0, 0, 0)" ? resolved : fallback;
+  }
+
   function readTheme(): { field: string; glyph: string } {
     const cs = getComputedStyle(root);
-    const field = (cs.getPropertyValue("--fvclip-field") || "").trim();
-    const glyph = (cs.getPropertyValue("--fvclip-ink") || "").trim();
+    const fieldRaw = (cs.getPropertyValue("--fvclip-field") || "").trim();
+    const glyphRaw = (cs.getPropertyValue("--fvclip-ink") || "").trim();
+    const heroBrown = (cs.getPropertyValue("--hero-brown") || "#35180e").trim();
     return {
-      field: field || "#000000",
-      glyph: glyph || "#ffffff",
+      field: resolveThemeColor(
+        fieldRaw,
+        usesTransparentField() ? "transparent" : "#000000",
+      ),
+      glyph: resolveThemeColor(glyphRaw, heroBrown || "#35180e"),
     };
   }
 
@@ -128,12 +145,14 @@ export function initFvclip(
     sampleSize: { w: number; h: number };
     dpr: number;
     asciiCells: Array<{ cx: number; cy: number; char: string; localOpacity: number }>;
+    sourceCrop: { sx: number; sy: number; sw: number; sh: number } | null;
   } = {
     media: null,
     displaySize: { w: 800, h: 450 },
     sampleSize: { w: 800, h: 450 },
     dpr: 1,
     asciiCells: [],
+    sourceCrop: null,
   };
 
   /**
@@ -190,6 +209,93 @@ export function initFvclip(
   function readLayoutTargetWidth(): number {
     const r = root.getBoundingClientRect();
     return Math.max(1, Math.floor(r.width));
+  }
+
+  function readLayoutTargetHeight(): number {
+    const r = root.getBoundingClientRect();
+    return Math.max(1, Math.floor(r.height));
+  }
+
+  function usesTransparentField(): boolean {
+    return root.getAttribute("data-fvclip-transparent") === "true";
+  }
+
+  function getFitMode(): "contain" | "cover" | "cover-x" {
+    const fit = root.getAttribute("data-fvclip-fit");
+    if (fit === "cover-x") return "cover-x";
+    if (fit === "cover") return "cover";
+    return "contain";
+  }
+
+  function getCropAxis(): "both" | "x" {
+    return root.getAttribute("data-fvclip-crop-axis") === "x" ? "x" : "both";
+  }
+
+  function getCropZoom(): number {
+    const z = parseFloat(root.getAttribute("data-fvclip-crop-zoom") || "1");
+    return Number.isFinite(z) && z >= 1 ? z : 1;
+  }
+
+  function computeHorizontalSourceCrop(
+    iw: number,
+    ih: number,
+    displayW: number,
+    displayH: number,
+    zoom: number,
+  ): { sx: number; sy: number; sw: number; sh: number } {
+    const z = Math.max(1, zoom);
+    const scale = displayH / ih;
+    let sw = displayW / scale;
+    sw = Math.min(iw, sw / z);
+    return {
+      sx: Math.max(0, (iw - sw) / 2),
+      sy: 0,
+      sw,
+      sh: ih,
+    };
+  }
+
+  function computeSourceCrop(
+    iw: number,
+    ih: number,
+    displayW: number,
+    displayH: number,
+    zoom: number,
+  ): { sx: number; sy: number; sw: number; sh: number } {
+    const targetAR = displayW / displayH;
+    const videoAR = iw / ih;
+    let sw: number;
+    let sh: number;
+    if (videoAR > targetAR) {
+      sh = ih;
+      sw = ih * targetAR;
+    } else {
+      sw = iw;
+      sh = iw / targetAR;
+    }
+    const z = Math.max(1, zoom);
+    sw /= z;
+    sh /= z;
+    return {
+      sx: Math.max(0, (iw - sw) / 2),
+      sy: Math.max(0, (ih - sh) / 2),
+      sw: Math.min(sw, iw),
+      sh: Math.min(sh, ih),
+    };
+  }
+
+  function drawVideoFrame(
+    context: CanvasRenderingContext2D,
+    video: HTMLVideoElement,
+    destW: number,
+    destH: number,
+  ): void {
+    const crop = state.sourceCrop;
+    if (crop) {
+      context.drawImage(video, crop.sx, crop.sy, crop.sw, crop.sh, 0, 0, destW, destH);
+      return;
+    }
+    context.drawImage(video, 0, 0, destW, destH);
   }
 
   function scheduleLayoutApply(): void {
@@ -318,11 +424,39 @@ export function initFvclip(
     const iw = v.videoWidth;
     const ih = v.videoHeight;
     if (iw < 1 || ih < 1) return;
-    const targetW = layoutTargetW || readLayoutTargetWidth();
-    const displayW = Math.max(1, Math.min(targetW, MAX_DISPLAY_WIDTH));
-    const displayH = Math.max(1, Math.round(ih * (displayW / iw)));
+    const fit = getFitMode();
+    let displayW: number;
+    let displayH: number;
+
+    if (fit === "cover-x") {
+      const targetW = layoutTargetW || readLayoutTargetWidth();
+      const targetH = readLayoutTargetHeight();
+      displayW = Math.max(1, Math.min(targetW, MAX_DISPLAY_WIDTH));
+      displayH = Math.max(1, targetH);
+      state.sourceCrop = computeHorizontalSourceCrop(iw, ih, displayW, displayH, getCropZoom());
+    } else if (fit === "cover") {
+      const targetW = layoutTargetW || readLayoutTargetWidth();
+      const targetH = readLayoutTargetHeight();
+      displayW = Math.max(1, Math.min(targetW, MAX_DISPLAY_WIDTH));
+      displayH = Math.max(1, targetH);
+      state.sourceCrop = computeSourceCrop(iw, ih, displayW, displayH, getCropZoom());
+    } else {
+      const targetW = layoutTargetW || readLayoutTargetWidth();
+      displayW = Math.max(1, Math.min(targetW, MAX_DISPLAY_WIDTH));
+      displayH = Math.max(1, Math.round(ih * (displayW / iw)));
+      const zoom = getCropZoom();
+      if (zoom > 1) {
+        state.sourceCrop =
+          getCropAxis() === "x"
+            ? computeHorizontalSourceCrop(iw, ih, displayW, displayH, zoom)
+            : computeSourceCrop(iw, ih, displayW, displayH, zoom);
+      } else {
+        state.sourceCrop = null;
+      }
+    }
+
     const sampleW = Math.max(1, Math.min(displayW, iw, MAX_SAMPLE_WIDTH));
-    const sampleH = Math.max(1, Math.round(ih * (sampleW / iw)));
+    const sampleH = Math.max(1, Math.round(displayH * (sampleW / displayW)));
     state.displaySize.w = displayW;
     state.displaySize.h = displayH;
     state.sampleSize.w = sampleW;
@@ -341,13 +475,15 @@ export function initFvclip(
     context.filter = "none";
     context.imageSmoothingEnabled = true;
     context.clearRect(0, 0, w, h);
-    context.fillStyle = theme.field;
-    context.fillRect(0, 0, w, h);
-    context.fillStyle = "#6a6770";
-    context.font = `400 13px ${FONT_STACK}`;
-    context.textAlign = "center";
-    context.textBaseline = "middle";
-    context.fillText("Loading video…", w / 2, h / 2);
+    if (!usesTransparentField()) {
+      context.fillStyle = theme.field;
+      context.fillRect(0, 0, w, h);
+      context.fillStyle = "#6a6770";
+      context.font = `400 13px ${FONT_STACK}`;
+      context.textAlign = "center";
+      context.textBaseline = "middle";
+      context.fillText("Loading video…", w / 2, h / 2);
+    }
   }
 
   function drawBaseImage(context: CanvasRenderingContext2D): void {
@@ -360,8 +496,10 @@ export function initFvclip(
     context.filter = "none";
     context.imageSmoothingEnabled = true;
     context.clearRect(0, 0, w, h);
-    context.fillStyle = theme.field;
-    context.fillRect(0, 0, w, h);
+    if (!usesTransparentField()) {
+      context.fillStyle = theme.field;
+      context.fillRect(0, 0, w, h);
+    }
   }
 
   function luminanceAt(data: Uint8ClampedArray, w: number, h: number, x: number, y: number): number {
@@ -523,7 +661,7 @@ export function initFvclip(
 
     let drew = false;
     if (v.readyState >= 2) {
-      sampleCtx.drawImage(v, 0, 0, sw, sh);
+      drawVideoFrame(sampleCtx, v, sw, sh);
       drew = true;
       if (lastFrameCtx) {
         if (lastFrameCanvas.width !== sw || lastFrameCanvas.height !== sh) {
@@ -534,7 +672,7 @@ export function initFvclip(
       }
     } else if (weakSample) {
       try {
-        sampleCtx.drawImage(v, 0, 0, sw, sh);
+        drawVideoFrame(sampleCtx, v, sw, sh);
         drew = true;
       } catch {
         /* decode / buffer ešte nie je kresliteľný */
@@ -849,7 +987,10 @@ export function initFvclip(
       startVideoPreviewLoop();
     }
   }
-  if (typeof IntersectionObserver !== "undefined") {
+  if (
+    typeof IntersectionObserver !== "undefined" &&
+    root.getAttribute("data-fvclip-visibility") !== "always"
+  ) {
     visibilityObserver = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {

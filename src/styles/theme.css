@@ -17,13 +17,25 @@
   --hero-brown: #35180e;
   --hero-tagline: #2c2c2c;
   --hero-nav-border: #e9e9e9;
+  --hero-nav-hover-pill: #ebe9e5;
   /* y=447 headline, +30 tagline — offset len pre nav, text je flex-centrovaný */
   --hero-nav-clearance: clamp(72px, 9svh, 98px);
   --hero-headline-tagline-gap: clamp(16px, 2.5svh, 30px);
   --hero-tagline-image-gap: 24px;
+  /* Po tagline reveal (~0.82s + 0.9s anim) — slide-up hero obrázka */
+  --hero-image-reveal-delay: 1s;
   --hero-image-peek: clamp(48px, 10svh, 140px);
   --hero-headline-max-width: 792px;
+  --hero-headline-letter-spacing: clamp(-1px, -0.1vw, -2px);
+  --hero-headline-line-height: 0.95;
+  --hero-tagline-line-height: 1.4;
   --hero-tagline-max-width: 759px;
+  --hero-flower-width: min(40vw, 540px);
+  --hero-flower-height: min(62vh, 660px);
+  --hero-flower-offset-x: 100px;
+  --hero-flower-offset-y: 300px;
+  --hero-flower-right-extra-y: 100px;
+  --hero-flower-edge-push: 0px;
 
   /* Logos / hero pás / footer / body — pôvodný tmavý canvas */
   --logos-canvas: #1c1310;
@@ -280,6 +292,38 @@ html {
   }
 }
 
+/* Hero spodný obrázok — slide-up po headline + tagline. */
+@keyframes hero-image-reveal-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 72px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.hero-image-reveal {
+  opacity: 0;
+  transform: translate3d(0, 72px, 0);
+  will-change: transform, opacity;
+}
+
+.hero-image-reveal--visible {
+  animation: hero-image-reveal-in 1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation-delay: var(--hero-image-reveal-delay);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-image-reveal,
+  .hero-image-reveal--visible {
+    opacity: 1;
+    transform: none;
+    animation: none !important;
+  }
+}
+
 /* Team sekcia: negatívny tracking + overflow na maskách orezáva konce slov (s, e, bodky …). */
 .team-section-headline {
   padding-inline: clamp(2px, 0.25vw, 6px);
@@ -402,6 +446,84 @@ html {
   background: var(--fvclip-field);
   min-height: var(--fvclip-min-h);
   max-height: var(--fvclip-max-h);
+}
+
+.fvclip--hero {
+  --fvclip-field: transparent;
+  --fvclip-ink: #35180e;
+  background: transparent;
+}
+
+.fvclip--hero .fvclip__plate--under {
+  display: none;
+}
+
+.fvclip--hero .fvclip__plate {
+  background: transparent;
+}
+
+/* Nav logo — Lottie aj statický mark v hero brown. */
+.hero-nav-logo svg path {
+  fill: var(--hero-brown) !important;
+}
+
+/* Hero header — cover-x: orez z bokov, plná výška kvetu. */
+.hero-header-flower {
+  pointer-events: none;
+  position: absolute;
+  top: calc(var(--hero-nav-clearance) + var(--hero-flower-offset-y));
+  z-index: 2;
+  width: var(--hero-flower-width);
+  height: var(--hero-flower-height);
+  overflow: hidden;
+}
+
+.hero-header-flower--right {
+  top: calc(var(--hero-nav-clearance) + var(--hero-flower-offset-y) + var(--hero-flower-right-extra-y));
+  right: calc(clamp(16px, 2.5vw, 48px) - var(--hero-flower-offset-x) - var(--hero-flower-edge-push));
+}
+
+.hero-header-flower--left {
+  top: calc(var(--hero-nav-clearance) + var(--hero-flower-offset-y) - 300px);
+  left: calc(clamp(16px, 2.5vw, 48px) - var(--hero-flower-offset-x) - 20px - var(--hero-flower-edge-push));
+  transform: scaleX(-1);
+}
+
+.hero-header-flower .fvclip__inner {
+  display: block;
+  height: 100%;
+  width: 100%;
+}
+
+.hero-header-flower .fvclip__stage {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+}
+
+@media (max-width: 1479px) {
+  :root {
+    --hero-flower-edge-push: 100px;
+  }
+}
+
+@media (max-width: 767px) {
+  .hero-header-flower {
+    --hero-flower-width: min(46vw, 300px);
+    --hero-flower-height: min(50vh, 400px);
+    --hero-flower-offset-x: 48px;
+    --hero-flower-offset-y: 140px;
+  }
+
+  .hero-header-flower--right {
+    top: calc(var(--hero-nav-clearance) + var(--hero-flower-offset-y) + 25%);
+    right: calc(clamp(8px, 1.5vw, 16px) - var(--hero-flower-offset-x) - var(--hero-flower-edge-push) + 40px);
+  }
+
+  .hero-header-flower--left {
+    top: calc(var(--hero-nav-clearance) + var(--hero-flower-offset-y) - 130px - 5%);
+    left: calc(clamp(8px, 1.5vw, 16px) - var(--hero-flower-offset-x) - 8px - var(--hero-flower-edge-push) + 40px);
+  }
 }
 
 .fvclip__inner {

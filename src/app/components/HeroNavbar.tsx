@@ -94,7 +94,7 @@ function MenuToggleIcon({ open }: { open: boolean }) {
 }
 
 /** Figma 626:2 — posúvajúci sa pill na pozadí desktop nav */
-const NAV_PILL_BG = "rgba(227,234,239,0.6)";
+const NAV_PILL_BG = "var(--hero-nav-hover-pill)";
 
 function HeroDesktopNav({
   reducedMotion,
@@ -210,8 +210,8 @@ function HeroDesktopNav({
           className={cn(
             "relative z-[2] inline-flex items-center justify-center rounded-[50px] px-4 py-2 text-[15px] font-medium whitespace-nowrap text-[var(--hero-brown)] outline-none select-none",
             "transition-colors duration-200 ease-out motion-reduce:transition-none",
-            hoverIdx === index && "text-[rgba(53,24,14,0.7)]",
-            "focus-visible:text-[rgba(53,24,14,0.7)] motion-reduce:focus-visible:text-[var(--hero-brown)]",
+            hoverIdx === index && "opacity-70",
+            "focus-visible:opacity-70 motion-reduce:focus-visible:opacity-100",
           )}
           onClick={() => {
             if (menuOpen) onMenuOpenChange(false);
@@ -251,7 +251,7 @@ function HeroNavMenuLink({
     <li>
       <a
         href={item.href}
-        className="block text-center text-[22px] font-medium leading-none text-black tracking-[-0.84px] transition-opacity duration-200 hover:opacity-50 sm:text-[28px]"
+        className="block text-center text-[22px] font-medium leading-none text-[var(--hero-brown)] tracking-[-0.84px] transition-opacity duration-200 hover:opacity-50 sm:text-[28px]"
         onClick={onRequestClose}
       >
         <span className="nav-menu-panel__mask">
@@ -347,7 +347,7 @@ function NavMenuPanel({
 
         <a
           href="mailto:hello@vibestudio.design?subject=Hello"
-          className="mt-8 text-center text-[16px] font-medium leading-none text-black tracking-[-0.54px] transition-opacity duration-200 hover:opacity-50 sm:mt-10 sm:text-[18px]"
+          className="mt-8 text-center text-[16px] font-medium leading-none text-[var(--hero-brown)] tracking-[-0.54px] transition-opacity duration-200 hover:opacity-50 sm:mt-10 sm:text-[18px]"
         >
           <span className="nav-menu-panel__mask">
             <span
@@ -500,16 +500,16 @@ export function HeroNavbar({
               backgroundColor: scrolled ? "rgba(255,255,255,0.92)" : "rgba(255,255,255,1)",
               backdropFilter: scrolled ? "blur(16px)" : "none",
               boxShadow: layerOpen
-                ? "0 8px 32px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06)"
+                ? "0 6px 20px rgba(0,0,0,0.06), 0 2px 6px rgba(0,0,0,0.04)"
                 : scrolled
-                  ? "0 4px 32px rgba(0,0,0,0.10), 0 1px 6px rgba(0,0,0,0.06)"
-                  : "0 2px 20px rgba(0,0,0,0.08)",
+                  ? "0 4px 16px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.03)"
+                  : "none",
             }}
             aria-label="Main"
           >
             <a
               href="#hero"
-              className="flex shrink-0 cursor-pointer items-center"
+              className="hero-nav-logo flex shrink-0 cursor-pointer items-center"
               onClick={() => {
                 if (menuOpen) onMenuOpenChange(false);
               }}

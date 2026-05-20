@@ -155,13 +155,26 @@ function cellHash(gx: number, gy: number) {
   return (n >>> 0) / 4294967296;
 }
 
+function resolveGlyphColor(raw: string, el: HTMLElement): string {
+  const trimmed = raw.trim();
+  const varMatch = /^var\((--[^,)]+)(?:,\s*([^)]+))?\)$/.exec(trimmed);
+  if (!varMatch) return trimmed;
+  const fromEl = getComputedStyle(el).getPropertyValue(varMatch[1]!).trim();
+  if (fromEl) return fromEl;
+  const fallback = varMatch[2]?.trim();
+  return fallback || "#35180e";
+}
+
 export function mountHeroAsciiLayer(options: {
   container: HTMLElement;
   canvas: HTMLCanvasElement;
   imageSrc: string;
   mobileImageSrc?: string;
+  /** Farba ASCII znakov (default biela pre tmavý hero). */
+  glyphColor?: string;
 }): () => void {
-  const { container, canvas } = options;
+  const { container, canvas, glyphColor = "#ffffff" } = options;
+  const inkColor = resolveGlyphColor(glyphColor, container);
 
   let layoutDebounceTimer: ReturnType<typeof setTimeout> | null = null;
   let animRafId: number | null = null;
@@ -390,7 +403,7 @@ export function mountHeroAsciiLayer(options: {
 
     context.save();
     context.clearRect(0, 0, w, h);
-    context.fillStyle = "#ffffff";
+    context.fillStyle = inkColor;
     context.textAlign = "center";
     context.textBaseline = "middle";
     context.font = `500 ${fontSize}px ${FONT_FAMILY}`;

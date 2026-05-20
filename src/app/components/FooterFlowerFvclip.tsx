@@ -4,15 +4,17 @@ import { cn } from "@/app/components/ui/utils";
 import flowerMp4 from "@/assets/flower.mp4";
 import { initFvclip } from "@/lib/fvclipInit";
 
-/** Footer dekorácia: ASCII „kvety“ z flower.mp4 (flower.html fvclip). */
+/** Footer / hero dekorácia: ASCII „kvety“ z flower.mp4 (flower.html fvclip). */
 export function FooterFlowerFvclip({
   className,
   style,
+  variant = "footer",
   /** Hustejšia mriežka + vyššia pravdepodobnosť bodu — lepšia čitateľnosť tvaru na úzkych displejoch. */
   dense = false,
 }: {
   className?: string;
   style?: CSSProperties;
+  variant?: "footer" | "hero";
   dense?: boolean;
 }) {
   const rootRef = useRef<HTMLDivElement>(null);
@@ -39,13 +41,23 @@ export function FooterFlowerFvclip({
   // devices; keep 2 on desktop where it's already sharp and saves GPU memory.
   const maxDpr = isTouchDevice ? "3" : "2";
 
+  const isHero = variant === "hero";
+
   return (
     <div
       ref={rootRef}
-      className={cn("fvclip h-full w-full", className)}
+      className={cn("fvclip h-full w-full", isHero && "fvclip--hero", className)}
       data-fvclip
       data-fvclip-max-dpr={maxDpr}
-      style={style}
+      data-fvclip-transparent={isHero ? "true" : undefined}
+      data-fvclip-visibility={isHero ? "always" : undefined}
+      data-fvclip-fit={isHero ? "cover-x" : undefined}
+      data-fvclip-crop-zoom={isHero ? "1.55" : undefined}
+      style={
+        isHero
+          ? ({ ...style, color: "#35180e", ["--fvclip-ink" as string]: "#35180e" } as CSSProperties)
+          : style
+      }
     >
       <div className="fvclip__inner h-full" aria-hidden>
         <div className="fvclip__stage">
@@ -63,14 +75,14 @@ export function FooterFlowerFvclip({
       </div>
 
       <div className="fvclip__tuning" hidden>
-        <input data-fv="contrast" type="hidden" value="1.74" />
-        <input data-fv="brightness" type="hidden" value="-46" />
-        <input data-fv="density" type="hidden" value={dense ? "0.88" : "0.67"} />
-        <input data-fv="gridSize" type="hidden" value={dense ? "9" : "14"} />
+        <input data-fv="contrast" type="hidden" value={isHero ? "1.72" : "1.74"} />
+        <input data-fv="brightness" type="hidden" value={isHero ? "-42" : "-46"} />
+        <input data-fv="density" type="hidden" value={isHero ? "0.76" : dense ? "0.88" : "0.67"} />
+        <input data-fv="gridSize" type="hidden" value={isHero ? "11" : dense ? "9" : "14"} />
         <input data-fv="overlayOpacity" type="hidden" value="1" />
-        <input data-fv="charScale" type="hidden" value={dense ? "0.72" : "0.81"} />
-        <input data-fv="brightnessInfluence" type="hidden" value={dense ? "0.78" : "0.7"} />
-        <input data-fv="edgeInfluence" type="hidden" value={dense ? "0.48" : "0.42"} />
+        <input data-fv="charScale" type="hidden" value={isHero ? "0.79" : dense ? "0.72" : "0.81"} />
+        <input data-fv="brightnessInfluence" type="hidden" value={isHero ? "0.72" : dense ? "0.78" : "0.7"} />
+        <input data-fv="edgeInfluence" type="hidden" value={isHero ? "0.48" : dense ? "0.48" : "0.42"} />
         <input data-fv="colorExclusionEnabled" type="checkbox" defaultChecked />
         <input data-fv="excludeColor" type="color" defaultValue="#5dade2" />
         <input data-fv="colorTolerance" type="hidden" value="50" />

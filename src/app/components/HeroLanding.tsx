@@ -1,7 +1,7 @@
 import { useEffect, useId, useLayoutEffect, useState } from "react";
 import { useInView } from "@/app/hooks/useInView";
 import imgHeroImage from "@/imports/image.webp";
-import { HeroFlowerPattern } from "@/app/components/HeroFlowerPattern";
+import { HeroHeaderFlower } from "@/app/components/HeroHeaderFlower";
 import { HeroNavbar } from "@/app/components/HeroNavbar";
 import { ScheduleCTA } from "@/app/components/ScheduleCTA";
 import { LogosSection } from "@/app/components/LogosSection";
@@ -13,6 +13,7 @@ import { CompetitorSection } from "@/app/components/CompetitorSection";
 import { FooterSection } from "@/app/components/FooterSection";
 import { LayoutContainer } from "@/app/components/layout";
 import { RevealHeadline } from "@/app/components/RevealHeadline";
+import { cn } from "@/app/components/ui/utils";
 
 const SCROLL_NAVBAR_THRESHOLD_PX = 40;
 const HERO_IMAGE_EXPAND_SCROLL_PX = 520;
@@ -75,13 +76,13 @@ export function HeroLanding() {
       <div className="relative w-full bg-[var(--logos-canvas)]">
 
         {/* ── Hero — biely header (Figma 640:2) ── */}
-        <section id="hero" className="relative w-full overflow-x-clip bg-white">
+        <section id="hero" className="relative w-full bg-white">
           <div
-            className="relative flex min-h-svh flex-col"
+            className="relative flex min-h-svh flex-col overflow-x-clip"
             style={{ paddingBottom: "var(--hero-image-peek)" }}
           >
-            <HeroFlowerPattern side="left" />
-            <HeroFlowerPattern side="right" />
+            <HeroHeaderFlower side="left" />
+            <HeroHeaderFlower side="right" />
 
             <LayoutContainer className="relative z-10 flex flex-1 flex-col items-center justify-center pb-4 pt-[var(--hero-nav-clearance)]">
               <div
@@ -97,8 +98,8 @@ export function HeroLanding() {
                   style={{
                     fontWeight: 500,
                     fontSize: "clamp(34px, 4.375vw, 84px)",
-                    lineHeight: 1,
-                    letterSpacing: "clamp(-1.2px, -0.131vw, -2.52px)",
+                    lineHeight: "var(--hero-headline-line-height)",
+                    letterSpacing: "var(--hero-headline-letter-spacing)",
                   }}
                 />
                 <RevealHeadline
@@ -115,7 +116,7 @@ export function HeroLanding() {
                     maxWidth: "var(--hero-tagline-max-width)",
                     fontWeight: 400,
                     fontSize: "clamp(14px, 1.04vw, 20px)",
-                    lineHeight: 1.6,
+                    lineHeight: "var(--hero-tagline-line-height)",
                   }}
                 />
               </div>
@@ -123,14 +124,17 @@ export function HeroLanding() {
           </div>
 
           <div
-            className="relative z-[1] w-full"
+            className="relative z-[3] w-full"
             style={{
               marginTop: "calc(-1 * var(--hero-image-peek))",
               paddingTop: "var(--hero-tagline-image-gap)",
             }}
           >
             <div
-              className="overflow-hidden will-change-[width,margin]"
+              className={cn(
+                "hero-image-reveal overflow-hidden will-change-[width,margin]",
+                heroInView && "hero-image-reveal--visible",
+              )}
               style={{
                 width: heroImageWidth > 0 ? `${heroImageWidth}px` : "100%",
                 marginLeft: heroImageWidth > 0 ? `${heroImageMarginLeft}px` : undefined,

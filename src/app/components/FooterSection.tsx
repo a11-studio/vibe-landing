@@ -329,7 +329,7 @@ export function FooterSection() {
           </span>
         </span>
         <span
-          className="mt-3 block"
+          className="mt-1.5 block md:mt-3"
           style={{
             fontWeight: 400,
             fontSize: "clamp(20px, 1.35vw, 28px)",

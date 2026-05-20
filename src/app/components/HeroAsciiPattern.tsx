@@ -6,13 +6,18 @@ import { cn } from "@/app/components/ui/utils";
 
 type HeroAsciiPatternProps = {
   className?: string;
+  /** Farba ASCII znakov — na white-header hero používame hnedú. */
+  glyphColor?: string;
 };
 
 /**
  * ASCII wave — vzorkuje `widget4.png` (rovnaký pomer ako hero `image.png`); canvas je inset-0 ako `<img>`
  * a vzorka používa object-cover, takže efekt drží krok s responzívnym pozadím 1:1.
  */
-export function HeroAsciiPattern({ className }: HeroAsciiPatternProps) {
+export function HeroAsciiPattern({
+  className,
+  glyphColor = "#ffffff",
+}: HeroAsciiPatternProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -25,8 +30,9 @@ export function HeroAsciiPattern({ className }: HeroAsciiPatternProps) {
       canvas,
       imageSrc: imgWidget4,
       mobileImageSrc: imgHeroAsciiMobileMask,
+      glyphColor,
     });
-  }, []);
+  }, [glyphColor]);
 
   return (
     <div
