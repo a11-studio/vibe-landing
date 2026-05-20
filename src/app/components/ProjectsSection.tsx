@@ -32,6 +32,8 @@ type ProjectEntry = {
   imageHeightPx?: number;
   /** Pri `object-cover` uprednostni ľavý horný roh (orezávanie inak než center). */
   focusTopLeft?: boolean;
+  /** Horná tretina / orez zhora, vodorovne vycentrované (pri responsive šírke). */
+  focusTopCenter?: boolean;
 };
 
 const PROJECTS: ProjectEntry[] = [
@@ -65,7 +67,7 @@ const PROJECTS: ProjectEntry[] = [
     tags: ["Interaction Design", "Prototype"],
     image: imgSelfcheckPhoto,
     imageHeightPx: MEDIUM_ROW_IMAGE_PX,
-    focusTopLeft: true,
+    focusTopCenter: true,
   },
   {
     name: "Rege Riders",
@@ -246,7 +248,11 @@ function ProjectCard({
   const aspectDefault = size === "large" ? "1064 / 576" : "600 / 325";
   const aspect = project.imageAspect ?? aspectDefault;
   const fixedH = project.imageHeightPx;
-  const objectPositionClass = project.focusTopLeft ? "object-left-top" : "";
+  const objectPositionClass = project.focusTopLeft
+    ? "object-left-top"
+    : project.focusTopCenter
+      ? "object-top"
+      : "";
 
   return (
     <article className="flex w-full min-w-0 flex-col gap-6 md:gap-8">

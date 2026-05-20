@@ -1,12 +1,12 @@
 import { useEffect, useId, useState } from "react";
 import { useInView } from "@/app/hooks/useInView";
-import imgBackgroundImage from "@/imports/image.webp";
-import imgHeadlineBlur from "@/imports/blur.webp";
+import imgHeroBackground from "@/imports/main-background.webp";
 import { HeroAsciiPattern } from "@/app/components/HeroAsciiPattern";
 import { HeroNavbar } from "@/app/components/HeroNavbar";
 import { ScheduleCTA } from "@/app/components/ScheduleCTA";
 import { LogosSection } from "@/app/components/LogosSection";
 import { ProcessSection } from "@/app/components/ProcessSection";
+import { ServicesSection } from "@/app/components/ServicesSection";
 import { ProjectsSection } from "@/app/components/ProjectsSection";
 import { AboutSection } from "@/app/components/AboutSection";
 import { CompetitorSection } from "@/app/components/CompetitorSection";
@@ -52,7 +52,7 @@ export function HeroLanding() {
           {/* Background */}
           <div className="absolute inset-0 z-0 pointer-events-none">
             <img
-              src={imgBackgroundImage}
+              src={imgHeroBackground}
               alt=""
               aria-hidden
               className="w-full h-full object-cover"
@@ -77,15 +77,7 @@ export function HeroLanding() {
 
           <LayoutContainer className="relative z-10 flex justify-center">
             <div ref={heroIntroRef} className="flex flex-col items-center text-center">
-              {/* Blur vrstva za nadpisom */}
               <div className="relative isolate mb-2 w-full sm:mb-3">
-                <img
-                  src={imgHeadlineBlur}
-                  alt=""
-                  aria-hidden
-                  className="pointer-events-none absolute -inset-6 object-cover object-center sm:-inset-8 md:-inset-10 lg:-inset-12"
-                  loading="eager"
-                />
                 <div className="relative z-10 px-0 pt-5 pb-2 sm:px-9 sm:pt-6 sm:pb-2 md:px-12 md:pt-7 md:pb-2 lg:px-14 lg:pt-8 lg:pb-2.5">
                   <RevealHeadline
                     as="h1"
@@ -132,6 +124,7 @@ export function HeroLanding() {
         <LogosSection />
         <ProjectsSection />
         <ProcessSection />
+        <ServicesSection />
         <AboutSection />
         <CompetitorSection />
         <FooterSection />

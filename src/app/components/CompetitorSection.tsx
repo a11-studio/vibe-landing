@@ -1,6 +1,6 @@
 import type { CSSProperties, ReactNode } from "react";
 import { Fragment, useLayoutEffect, useRef, useState } from "react";
-import imgHeroTexture from "@/imports/image.webp";
+import imgMainBackground from "@/imports/main-background.webp";
 import svgPaths from "@/imports/Footer/svg-39tshfia8v";
 import { LayoutContainer } from "@/app/components/layout";
 import { RevealHeadline } from "@/app/components/RevealHeadline";
@@ -24,13 +24,13 @@ function VibeLogoWhite() {
   );
 }
 
-/** Rám okolo stĺpca Vibe — ten istý obrázok ako hero; jemná rotácia textúry (theme.css). */
+/** Rám okolo stĺpca Vibe — rovnaké pozadie ako hero; jemná rotácia textúry (theme.css). */
 function VibeColumnFrame({ children }: { children: ReactNode }) {
   return (
     <div className="competitor-vibe-frame h-full min-h-full">
       <div
         className="competitor-vibe-frame__orbit"
-        style={{ backgroundImage: `url(${imgHeroTexture})` }}
+        style={{ backgroundImage: `url(${imgMainBackground})` }}
         aria-hidden
       />
       <div
