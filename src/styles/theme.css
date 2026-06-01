@@ -534,6 +534,197 @@ html {
   }
 }
 
+/* Services — štyri manifesto panely (odokrytie stĺpca) */
+.services-column-reveal-panel {
+  will-change: transform;
+}
+
+.services-column-reveal-panel--horizontal {
+  transform: scaleX(1);
+  transform-origin: left center;
+}
+
+.services-column-reveal-panel--vertical {
+  transform: scaleY(1);
+  transform-origin: top center;
+}
+
+.services-column-reveal-panel--horizontal.services-column-reveal-panel--active {
+  animation: services-column-panel-reveal-x 0.88s cubic-bezier(0.22, 1, 0.36, 1)
+    forwards;
+}
+
+.services-column-reveal-panel--vertical.services-column-reveal-panel--active {
+  animation: services-column-panel-reveal-y 0.88s cubic-bezier(0.22, 1, 0.36, 1)
+    forwards;
+}
+
+@keyframes services-column-panel-reveal-x {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+@keyframes services-column-panel-reveal-y {
+  from {
+    transform: scaleY(1);
+  }
+  to {
+    transform: scaleY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .services-column-reveal-panel,
+  .services-column-reveal-panel--active {
+    display: none;
+  }
+}
+
+/* Services — mask reveal (nadpisy stĺpcov + položky zoznamu) */
+.services-section-headline .reveal-headline__mask--inline {
+  padding-right: max(0.05em, 2px);
+  padding-left: 0.015em;
+}
+
+.services-section-icon__mask {
+  display: block;
+  overflow: hidden;
+  height: clamp(44px, 11vw, 48px);
+  padding-bottom: 0.12em;
+}
+
+.services-section-icon__mask .reveal-headline__line {
+  display: block;
+}
+
+.services-section-list__mask {
+  display: block;
+}
+
+.services-section-list__row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.375rem; /* pôvodné ps-1.5 medzi markerom a textom */
+}
+
+.services-section-list__bullet {
+  flex-shrink: 0;
+  width: 0.55em;
+  text-align: center;
+  line-height: inherit;
+  user-select: none;
+}
+
+.services-section-list__text {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Services — bloky padajúce pozdĺž vertikálnych línií */
+.services-divider-block {
+  position: absolute;
+  left: 0;
+  top: calc(-1 * var(--services-divider-block-h, 160px));
+  animation: services-divider-block-fall 7s linear infinite;
+}
+
+.services-divider-block--static {
+  animation: none;
+  top: 30%;
+  opacity: 0.35;
+}
+
+@keyframes services-divider-block-fall {
+  from {
+    top: calc(-1 * var(--services-divider-block-h, 160px));
+  }
+  to {
+    top: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .services-divider-block {
+    animation: none;
+    top: 30%;
+    opacity: 0.35;
+  }
+}
+
+/* Services manifesto — centrovaný copy wrapper (~6/12 stĺpcov layoutu) */
+.services-manifesto__wrapper {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: min(838px, 100%);
+  min-width: 0;
+  margin-inline: auto;
+}
+
+@media (min-width: 768px) {
+  .services-manifesto__wrapper {
+    max-width: min(
+      838px,
+      calc((100% - 11 * 20px) / 2 + 5 * 20px)
+    );
+  }
+}
+
+/* Services hero — tímové fotky po elipse okolo nadpisu */
+.services-hero__orbit-field {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.services-hero__orbit-photo {
+  --orbit-w: clamp(88px, 7.6vw, 146px);
+  --orbit-h: clamp(96px, 8.35vw, 160px);
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--orbit-w);
+  height: var(--orbit-h);
+  margin-left: calc(var(--orbit-w) / -2);
+  margin-top: calc(var(--orbit-h) / -2);
+  offset-path: ellipse(44% 36% at 50% 47%);
+  offset-distance: 0%;
+  offset-rotate: 0deg;
+  animation: services-hero-orbit 36s linear infinite;
+  animation-delay: var(--orbit-delay, 0s);
+  will-change: offset-distance;
+}
+
+.services-hero__orbit-photo--static {
+  animation: none;
+  offset-distance: var(--orbit-start, 0%);
+}
+
+@keyframes services-hero-orbit {
+  to {
+    offset-distance: 100%;
+  }
+}
+
+@media (max-width: 767px) {
+  .services-hero__orbit-photo {
+    --orbit-w: clamp(72px, 20vw, 104px);
+    --orbit-h: clamp(78px, 22vw, 114px);
+    offset-path: ellipse(40% 34% at 50% 46%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .services-hero__orbit-photo:not(.services-hero__orbit-photo--static) {
+    animation: none;
+    offset-distance: calc((var(--orbit-index, 0) / var(--orbit-count, 5)) * 100%);
+  }
+}
+
 .fvclip__inner {
   width: 100%;
   line-height: 0;

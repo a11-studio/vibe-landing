@@ -7,6 +7,7 @@ import imgSilencio from "@/assets/d0cc88609464830db5a519803d66b943f3a8741e.webp"
 import imgRealitiez from "@/assets/e456a14899251227c4ec37785838c3ea552f7971.webp";
 import imgAccuWeather from "@/assets/ccbe4b5cf5687edf1efe0a848055c6d13b9a393f.webp";
 import imgSpotify from "@/assets/5befbd932cd55a328c20d0b015fe5afc87e4ad6f.webp";
+import spotifyMp4 from "@/assets/spotify.mp4";
 import { LayoutContainer, LayoutGrid } from "@/app/components/layout";
 import { cn } from "@/app/components/ui/utils";
 import { useInView } from "@/app/hooks/useInView";
@@ -26,6 +27,8 @@ type ProjectEntry = {
   description: string;
   tags: string[];
   image: string;
+  /** Voliteľné video namiesto statického obrázka (poster = `image`). */
+  video?: string;
   /** Voliteľný CSS aspect-ratio, ak nie je `imageHeightPx`. */
   imageAspect?: string;
   /** Pevná výška obrázka (px) — zarovnanie v jednom riadku. */
@@ -83,6 +86,7 @@ const PROJECTS: ProjectEntry[] = [
       "A spatial product exploration rethinking how music discovery and listening could work in a mixed-reality environment.",
     tags: ["UX/UI Design", "Spatial Design"],
     image: imgSpotify,
+    video: spotifyMp4,
   },
 ];
 
@@ -102,6 +106,54 @@ function ProjectTag({ label }: { label: string }) {
     >
       {label}
     </span>
+  );
+}
+
+function ProjectMedia({
+  project,
+  className,
+  style,
+}: {
+  project: ProjectEntry;
+  className?: string;
+  style?: CSSProperties;
+}) {
+  const [reduceMotion, setReduceMotion] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setReduceMotion(mq.matches);
+    const onChange = () => setReduceMotion(mq.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+
+  if (project.video && !reduceMotion) {
+    return (
+      <video
+        src={project.video}
+        poster={project.image}
+        className={className}
+        style={style}
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="auto"
+        disablePictureInPicture
+        aria-hidden
+      />
+    );
+  }
+
+  return (
+    <img
+      src={project.image}
+      alt=""
+      className={className}
+      style={style}
+      loading="lazy"
+    />
   );
 }
 
@@ -212,11 +264,9 @@ function ProjectsRow3SpotifyMetric({
             className="col-span-12 w-full overflow-hidden md:col-span-7 md:self-start"
             style={{ borderRadius: IMAGE_RADIUS }}
           >
-            <img
-              src={project.image}
-              alt=""
+            <ProjectMedia
+              project={project}
               className="block aspect-[1064/576] w-full object-cover"
-              loading="lazy"
             />
           </div>
           <div className="hidden min-h-px md:col-span-1 md:block" aria-hidden />
@@ -258,9 +308,8 @@ function ProjectCard({
     <article className="flex w-full min-w-0 flex-col gap-6 md:gap-8">
       <div className="w-full overflow-hidden" style={{ borderRadius: IMAGE_RADIUS }}>
         {fixedH != null ? (
-          <img
-            src={project.image}
-            alt=""
+          <ProjectMedia
+            project={project}
             className={cn(
               "block h-auto w-full object-cover md:h-[var(--project-fixed-img-h)] md:max-h-[var(--project-fixed-img-h)] md:aspect-auto",
               objectPositionClass,
@@ -271,15 +320,12 @@ function ProjectCard({
                 ["--project-fixed-img-h" as string]: `${fixedH}px`,
               } as CSSProperties
             }
-            loading="lazy"
           />
         ) : (
-          <img
-            src={project.image}
-            alt=""
+          <ProjectMedia
+            project={project}
             className={cn("block h-auto w-full object-cover", objectPositionClass)}
             style={{ aspectRatio: aspect }}
-            loading="lazy"
           />
         )}
       </div>

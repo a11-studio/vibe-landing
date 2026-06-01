@@ -1,11 +1,12 @@
 import { useEffect, useLayoutEffect, useRef, useState, useCallback, type CSSProperties, type FocusEvent } from "react";
 import { motion, useReducedMotion } from "motion/react";
+import { Link, NavLink } from "react-router-dom";
 import { cn } from "@/app/components/ui/utils";
 import { VibeLogoLottieHover, VIBE_LOGO_NAV_PX } from "@/app/components/VibeLogoLottieHover";
 import vibeLogoIntroAnimation from "@/assets/lottie/Vibe_logo_anim_V1_intro.json";
 import svgPaths from "@/imports/MainContainer/svg-mqtv51ktgp";
 import { LayoutContainer } from "@/app/components/layout";
-import { CALENDLY_BOOKING_URL, MOBILE_NAV } from "@/app/components/heroConstants";
+import { CALENDLY_BOOKING_URL, SITE_NAV } from "@/app/components/heroConstants";
 
 // ─── Logo ─────────────────────────────────────────────────────────────────────
 const HERO_BROWN = "var(--hero-brown)";
@@ -197,28 +198,31 @@ function HeroDesktopNav({
         }}
         transition={pillTransition}
       />
-      {MOBILE_NAV.map((item, index) => (
-        <a
-          key={item.href}
+      {SITE_NAV.map((item, index) => (
+        <NavLink
+          key={item.to}
+          to={item.to}
+          end={item.to === "/"}
           ref={(el) => {
             linkRefs.current[index] = el;
           }}
-          href={item.href}
           onMouseEnter={() => showAtIndex(index)}
           onFocus={() => showAtIndex(index)}
           onBlur={onLinkBlur}
-          className={cn(
-            "relative z-[2] inline-flex items-center justify-center rounded-[50px] px-4 py-2 text-[15px] font-medium whitespace-nowrap text-[var(--hero-brown)] outline-none select-none",
-            "transition-colors duration-200 ease-out motion-reduce:transition-none",
-            hoverIdx === index && "opacity-70",
-            "focus-visible:opacity-70 motion-reduce:focus-visible:opacity-100",
-          )}
+          className={({ isActive }) =>
+            cn(
+              "relative z-[2] inline-flex items-center justify-center rounded-[50px] px-4 py-2 text-[15px] font-medium whitespace-nowrap text-[var(--hero-brown)] outline-none select-none no-underline",
+              "transition-colors duration-200 ease-out motion-reduce:transition-none",
+              (hoverIdx === index || isActive) && "opacity-70",
+              "focus-visible:opacity-70 motion-reduce:focus-visible:opacity-100",
+            )
+          }
           onClick={() => {
             if (menuOpen) onMenuOpenChange(false);
           }}
         >
           {item.label}
-        </a>
+        </NavLink>
       ))}
     </div>
   );
@@ -228,7 +232,7 @@ function HeroDesktopNav({
 const MENU_PANEL_NAV_STAGGER_MS = 54;
 const MENU_PANEL_AFTER_NAV_MS = 88;
 const MENU_PANEL_LINE_DELAY_MS =
-  (MOBILE_NAV.length - 1) * MENU_PANEL_NAV_STAGGER_MS + MENU_PANEL_AFTER_NAV_MS;
+  (SITE_NAV.length - 1) * MENU_PANEL_NAV_STAGGER_MS + MENU_PANEL_AFTER_NAV_MS;
 const MENU_PANEL_AFTER_LINE_MS = 72;
 const MENU_PANEL_EMAIL_DELAY_MS = MENU_PANEL_LINE_DELAY_MS + MENU_PANEL_AFTER_LINE_MS;
 const MENU_PANEL_AFTER_EMAIL_MS = 70;
@@ -242,16 +246,22 @@ function HeroNavMenuLink({
   reveal,
   onRequestClose,
 }: {
-  item: (typeof MOBILE_NAV)[number];
+  item: (typeof SITE_NAV)[number];
   index: number;
   reveal: boolean;
   onRequestClose: () => void;
 }) {
   return (
     <li>
-      <a
-        href={item.href}
-        className="block text-center text-[22px] font-medium leading-none text-[var(--hero-brown)] tracking-[-0.84px] transition-opacity duration-200 hover:opacity-50 sm:text-[28px]"
+      <NavLink
+        to={item.to}
+        end={item.to === "/"}
+        className={({ isActive }) =>
+          cn(
+            "block text-center text-[22px] font-medium leading-none text-[var(--hero-brown)] tracking-[-0.84px] no-underline transition-opacity duration-200 hover:opacity-50 sm:text-[28px]",
+            isActive && "opacity-50",
+          )
+        }
         onClick={onRequestClose}
       >
         <span className="nav-menu-panel__mask">
@@ -264,7 +274,7 @@ function HeroNavMenuLink({
             {item.label}
           </span>
         </span>
-      </a>
+      </NavLink>
     </li>
   );
 }
@@ -326,9 +336,9 @@ function NavMenuPanel({
         aria-label="Primary"
       >
         <ul className="m-0 flex w-full max-w-full list-none flex-col items-center gap-6 p-0 sm:gap-8">
-          {MOBILE_NAV.map((item, index) => (
+          {SITE_NAV.map((item, index) => (
             <HeroNavMenuLink
-              key={item.href}
+              key={item.to}
               item={item}
               index={index}
               reveal={reveal}
@@ -507,15 +517,15 @@ export function HeroNavbar({
             }}
             aria-label="Main"
           >
-            <a
-              href="#hero"
+            <Link
+              to="/"
               className="hero-nav-logo flex shrink-0 cursor-pointer items-center"
               onClick={() => {
                 if (menuOpen) onMenuOpenChange(false);
               }}
             >
               <VibeLogo />
-            </a>
+            </Link>
 
             <HeroDesktopNav
               reducedMotion={!!reducedMotion}

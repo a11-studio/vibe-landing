@@ -1,9 +1,9 @@
 /** Verejný odkaz na rezervovanie hovoru (Calendly). */
 export const CALENDLY_BOOKING_URL = "https://calendly.com/martin-mroc/15min";
 
-/** Navigačné položky — zdieľané medzi desktop pill nav a mobilným menu panelom. */
-export const MOBILE_NAV = [
-  { label: "Projects", href: "#work" },
-  { label: "About", href: "#process" },
-  { label: "Team", href: "#team" },
+/** Hlavná navigácia — desktop pill nav + mobilný menu panel. */
+export const SITE_NAV = [
+  { label: "Home", to: "/" },
+  { label: "Services", to: "/services" },
+  { label: "Contact", to: "/contact" },
 ] as const;

@@ -3,8 +3,11 @@ import { cn } from "@/app/components/ui/utils";
 import { useInView } from "@/app/hooks/useInView";
 
 /** s medzi logickými riadkami; medzi slovami v riadku (jemny stagger). */
-const LINE_STAGGER_S = 0.12;
-const WORD_STAGGER_S = 0.05;
+export const REVEAL_LINE_STAGGER_S = 0.12;
+export const REVEAL_WORD_STAGGER_S = 0.05;
+
+const LINE_STAGGER_S = REVEAL_LINE_STAGGER_S;
+const WORD_STAGGER_S = REVEAL_WORD_STAGGER_S;
 
 function splitLineIntoWords(text: string): string[] {
   const t = text.trim();
