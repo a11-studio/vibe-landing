@@ -19,7 +19,7 @@ export function ServicesPageHero() {
 
         <ServicesOrbitingTeam />
 
-        <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-5 pb-4 pt-[var(--hero-nav-clearance)]">
+        <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-5 pb-[clamp(100px,28vw,140px)] pt-[var(--hero-nav-clearance)] md:pb-4">
           <div
             ref={ref}
             id="services-hero-heading"

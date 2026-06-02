@@ -710,11 +710,72 @@ html {
   }
 }
 
+/* Services hero — mobile: spodný marquee (jedna rovina, pomalý loop) */
+.services-hero__team-marquee {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 5;
+  overflow: hidden;
+  pointer-events: none;
+  padding-bottom: clamp(12px, 3.5vw, 20px);
+}
+
+.services-hero__team-marquee-track {
+  display: flex;
+  width: max-content;
+  align-items: flex-end;
+  gap: clamp(10px, 3vw, 16px);
+  padding-inline: clamp(12px, 4vw, 20px);
+  animation: services-hero-team-marquee 48s linear infinite;
+  will-change: transform;
+}
+
+.services-hero__team-marquee-track--static {
+  width: 100%;
+  max-width: 100%;
+  justify-content: center;
+  animation: none;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.services-hero__team-marquee-track--static::-webkit-scrollbar {
+  display: none;
+}
+
+.services-hero__team-photo {
+  --team-photo-w: clamp(72px, 20vw, 104px);
+  --team-photo-h: clamp(78px, 22vw, 114px);
+  width: var(--team-photo-w);
+  height: var(--team-photo-h);
+}
+
+@keyframes services-hero-team-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
 @media (max-width: 767px) {
   .services-hero__orbit-photo {
     --orbit-w: clamp(72px, 20vw, 104px);
     --orbit-h: clamp(78px, 22vw, 114px);
     offset-path: ellipse(40% 34% at 50% 46%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .services-hero__team-marquee-track:not(.services-hero__team-marquee-track--static) {
+    animation: none;
+    justify-content: center;
+    width: 100%;
+    max-width: 100%;
   }
 }
 

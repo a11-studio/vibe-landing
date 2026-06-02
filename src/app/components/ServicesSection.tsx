@@ -212,7 +212,7 @@ function ServiceColumn({
         }}
       />
 
-      <ul className="m-0 list-none ps-4">
+      <ul className="m-0 list-none p-0">
         {column.items.map((item, itemIndex) => (
           <li
             key={item}

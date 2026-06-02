@@ -9,6 +9,7 @@ import imgAccuWeather from "@/assets/ccbe4b5cf5687edf1efe0a848055c6d13b9a393f.we
 import imgSpotify from "@/assets/5befbd932cd55a328c20d0b015fe5afc87e4ad6f.webp";
 import spotifyMp4 from "@/assets/spotify.mp4";
 import { LayoutContainer, LayoutGrid } from "@/app/components/layout";
+import { ProjectRippleMedia } from "@/app/components/ProjectRippleMedia";
 import { cn } from "@/app/components/ui/utils";
 import { useInView } from "@/app/hooks/useInView";
 import { easeOutCubic } from "@/app/utils/easing";
@@ -128,7 +129,7 @@ function ProjectMedia({
     return () => mq.removeEventListener("change", onChange);
   }, []);
 
-  if (project.video && !reduceMotion) {
+  if (project.video && reduceMotion) {
     return (
       <video
         src={project.video}
@@ -147,12 +148,12 @@ function ProjectMedia({
   }
 
   return (
-    <img
-      src={project.image}
-      alt=""
+    <ProjectRippleMedia
+      imageA={project.image}
+      imageB={project.image}
+      label={project.name}
       className={className}
       style={style}
-      loading="lazy"
     />
   );
 }
@@ -195,7 +196,13 @@ function ProjectCardText({ project }: { project: ProjectEntry }) {
 }
 
 /** Silencio + Realitiez: spodné hrany obrázkov v jednej rovine — Realitiez je len posunutý nadol (`items-end` / `self-end`), obrázky bez natiahnutia orezania. */
-function ProjectsRow1Aligned({ left, right }: { left: ProjectEntry; right: ProjectEntry }) {
+function ProjectsRow1Aligned({
+  left,
+  right,
+}: {
+  left: ProjectEntry;
+  right: ProjectEntry;
+}) {
   return (
     <>
       {/* Mobile: každý projekt ako box — médium, potom text */}
@@ -210,21 +217,21 @@ function ProjectsRow1Aligned({ left, right }: { left: ProjectEntry; right: Proje
             className="col-span-12 w-full overflow-hidden md:col-span-7 md:self-start"
             style={{ borderRadius: IMAGE_RADIUS }}
           >
-            <img
-              src={left.image}
-              alt=""
-              className="block aspect-[1064/576] w-full object-cover"
-              loading="lazy"
+            <ProjectRippleMedia
+              imageA={left.image}
+              imageB={left.image}
+              label={left.name}
+              className="block aspect-[1064/576] w-full"
             />
           </div>
           <div className="hidden min-h-px md:col-span-1 md:block" aria-hidden />
           <div className="col-span-12 w-full md:col-span-4 md:self-end">
             <div className="w-full overflow-hidden" style={{ borderRadius: IMAGE_RADIUS }}>
-              <img
-                src={right.image}
-                alt=""
-                className="block aspect-[600/325] w-full object-cover"
-                loading="lazy"
+              <ProjectRippleMedia
+                imageA={right.image}
+                imageB={right.image}
+                label={right.name}
+                className="block aspect-[600/325] w-full"
               />
             </div>
           </div>
@@ -266,7 +273,7 @@ function ProjectsRow3SpotifyMetric({
           >
             <ProjectMedia
               project={project}
-              className="block aspect-[1064/576] w-full object-cover"
+              className="block aspect-[1064/576] w-full"
             />
           </div>
           <div className="hidden min-h-px md:col-span-1 md:block" aria-hidden />
@@ -311,7 +318,7 @@ function ProjectCard({
           <ProjectMedia
             project={project}
             className={cn(
-              "block h-auto w-full object-cover md:h-[var(--project-fixed-img-h)] md:max-h-[var(--project-fixed-img-h)] md:aspect-auto",
+              "block h-auto w-full md:h-[var(--project-fixed-img-h)] md:max-h-[var(--project-fixed-img-h)] md:aspect-auto",
               objectPositionClass,
             )}
             style={
@@ -324,7 +331,7 @@ function ProjectCard({
         ) : (
           <ProjectMedia
             project={project}
-            className={cn("block h-auto w-full object-cover", objectPositionClass)}
+            className={cn("block h-auto w-full", objectPositionClass)}
             style={{ aspectRatio: aspect }}
           />
         )}
@@ -476,7 +483,10 @@ export function ProjectsSection() {
           </div>
 
           {/* Row 3 — 7 · 1 · 4 (Spotify + metrika) */}
-          <ProjectsRow3SpotifyMetric project={p5} metricBackgroundImage={imgBanner} />
+          <ProjectsRow3SpotifyMetric
+            project={p5}
+            metricBackgroundImage={imgBanner}
+          />
         </LayoutGrid>
       </LayoutContainer>
     </section>

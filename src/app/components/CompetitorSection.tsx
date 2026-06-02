@@ -4,6 +4,7 @@ import imgMainBackground from "@/imports/main-background.webp";
 import svgPaths from "@/imports/Footer/svg-39tshfia8v";
 import { LayoutContainer } from "@/app/components/layout";
 import { RevealHeadline } from "@/app/components/RevealHeadline";
+import { cn } from "@/app/components/ui/utils";
 import { useInView } from "@/app/hooks/useInView";
 
 /** Pozadie sekcie — Figma 622:25440 */
@@ -200,11 +201,13 @@ export function CompetitorSection() {
           <RevealHeadline
             lines={["So why companies choose us?"]}
             wrapperClassName="competitor-section-headline"
-            className="m-0 text-center text-white"
+            className={cn(
+              "m-0 text-center text-white",
+              "tracking-[-0.02em] md:tracking-[-0.045em] lg:tracking-[-0.06em]",
+            )}
             style={{
               fontWeight: 500,
               fontSize: "clamp(28px, 3.2vw, 48px)",
-              letterSpacing: "-3px",
               lineHeight: "normal",
               color: "#ffffff",
               margin: 0,

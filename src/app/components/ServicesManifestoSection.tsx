@@ -54,15 +54,16 @@ function ManifestoWord({
 }: {
   word: string;
   opacity: number;
+  /** Medzera medzi slovami — bežná, aby sa dalo zalamovať medzi celými slovami. */
   trailingSpace?: boolean;
 }) {
   return (
     <span
-      className="transition-opacity duration-100 motion-reduce:transition-none"
+      className="inline transition-opacity duration-100 motion-reduce:transition-none"
       style={{ opacity }}
     >
       {word}
-      {trailingSpace ? "\u00a0" : null}
+      {trailingSpace ? " " : null}
     </span>
   );
 }
@@ -165,7 +166,14 @@ export function ServicesManifestoSection() {
         >
           <div className="services-manifesto__wrapper font-medium text-left">
             {MANIFESTO_BLOCKS.map((block, blockIndex) => (
-              <div key={blockIndex} className={cn(blockIndex > 0 && "mt-[1.3em]")}>
+              <p
+                key={blockIndex}
+                className={cn(
+                  "m-0 text-left text-pretty break-normal",
+                  blockIndex > 0 && "mt-[1.3em]",
+                )}
+                style={TEXT_STYLE}
+              >
                 {block.lines.map((line, lineIndex) => {
                   const isLastLine = lineIndex === block.lines.length - 1;
                   const tailCount =
@@ -177,14 +185,10 @@ export function ServicesManifestoSection() {
                   const tailWords = tailStart > 0 ? line.slice(tailStart) : [];
 
                   return (
-                    <p
-                      key={lineIndex}
-                      className={cn(
-                        "m-0 text-left text-pretty",
-                        tailCount === 0 && "[overflow-wrap:anywhere]",
-                      )}
-                      style={TEXT_STYLE}
-                    >
+                    <span key={lineIndex} className="inline">
+                      {lineIndex > 0 ? (
+                        <br className="hidden md:inline" aria-hidden />
+                      ) : null}
                       {leadWords.map((word, wordIndex) => {
                         const globalIndex =
                           globalIndexByKey.get(`${blockIndex}-${lineIndex}-${wordIndex}`) ?? 0;
@@ -215,10 +219,10 @@ export function ServicesManifestoSection() {
                           })}
                         </span>
                       ) : null}
-                    </p>
+                    </span>
                   );
                 })}
-              </div>
+              </p>
             ))}
           </div>
         </LayoutContainer>
