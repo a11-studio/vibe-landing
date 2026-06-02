@@ -7,9 +7,9 @@ import imgFlexible from "@/assets/image-2.svg?url";
 import imgPrototype from "@/assets/image-3.svg?url";
 import { IMAGE_RADIUS } from "@/app/utils/tokens";
 
-const ApproachWebGLImage = lazy(() =>
-  import("@/app/components/ApproachWebGLImage").then((m) => ({
-    default: m.ApproachWebGLImage,
+const ApproachMagneticSvg = lazy(() =>
+  import("@/app/components/ApproachMagneticSvg").then((m) => ({
+    default: m.ApproachMagneticSvg,
   })),
 );
 
@@ -17,7 +17,7 @@ const PROCESS_CARD_ENTER_Y = 30;
 const PROCESS_CARD_STAGGER_S = 0.14;
 const PROCESS_CARD_DURATION_S = 0.55;
 
-/** WebGL magnet: myš + dosť široké okno (DevTools mobile width → vypnuté; čisto pointer nestačí). */
+/** SVG magnet: myš + dosť široké okno (DevTools mobile width → vypnuté; čisto pointer nestačí). */
 const APPROACH_MAGNET_MEDIA =
   "(hover: hover) and (pointer: fine) and (min-width: 768px)";
 
@@ -63,10 +63,9 @@ function ApproachCard({
           <Suspense
             fallback={<img src={image} alt={title} className="h-full w-full object-contain" loading="lazy" />}
           >
-            <ApproachWebGLImage
+            <ApproachMagneticSvg
               src={image}
               alt={title}
-              reducedMotion={false}
               className="h-full w-full min-h-0"
             />
           </Suspense>

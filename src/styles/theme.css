@@ -84,7 +84,7 @@
 }
 
 body {
-  background-color: var(--logos-canvas);
+  background-color: var(--background);
 }
 
 html {

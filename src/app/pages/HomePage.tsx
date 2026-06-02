@@ -60,7 +60,7 @@ export function HomePage() {
   const heroImageMarginLeft = Math.max(0, (imageWidths.full - heroImageWidth) / 2);
 
   return (
-    <div className="relative w-full bg-[var(--logos-canvas)]">
+    <div className="relative w-full bg-white">
       <section id="hero" className="relative w-full bg-white">
         <div
           className="relative flex min-h-svh flex-col overflow-x-clip"
